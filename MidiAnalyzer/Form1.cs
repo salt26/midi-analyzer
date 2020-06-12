@@ -46,7 +46,7 @@ namespace MidiAnalyzer
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs eventArgs)
         {
             string path = @".\..\..\..\midi";
             if (Directory.Exists(path))
@@ -64,9 +64,10 @@ namespace MidiAnalyzer
 
                         Console.WriteLine("Format {0}, Tracks {1}, Delta Ticks Per Quarter Note {2}",
                             mf.FileFormat, mf.Tracks, mf.DeltaTicksPerQuarterNote);
-                        //var timeSignature = mf.Events[0].OfType<TimeSignatureEvent>().FirstOrDefault();
-                        
-                        var timeSignatureList = mf.Events[0].OfType<TimeSignatureEvent>().ToList();
+
+                        #region Time signature preprocessing
+
+                        List<TimeSignatureEvent> timeSignatureList = mf.Events[0].OfType<TimeSignatureEvent>().ToList();
                         timeSignatureList.Sort((e1, e2) => Math.Sign(e1.AbsoluteTime - e2.AbsoluteTime));
                         if (timeSignatureList.Count == 0 || timeSignatureList[0].AbsoluteTime > 0)
                         {
@@ -88,18 +89,51 @@ namespace MidiAnalyzer
                             timeSignatureList.RemoveAt(duplicatedIndices[i]);
                         }
 
+                        #endregion
+
+                        #region Key signature preprocessing
+
+                        List<KeySignatureEvent> keySignatureList = mf.Events[0].OfType<KeySignatureEvent>().ToList();
+                        keySignatureList.Sort((e1, e2) => Math.Sign(e1.AbsoluteTime - e2.AbsoluteTime));
+                        if (keySignatureList.Count == 0 || keySignatureList[0].AbsoluteTime > 0)
+                        {
+                            keySignatureList.Insert(0, new KeySignatureEvent(0, 0, 0));
+                        }
+                        keySignatureList.Add(new KeySignatureEvent(0, 0, long.MaxValue));
+
+                        // 이 아래 코드와 같은 알고리즘을 skyline 구현 시 사용할 수 있다.
+                        duplicatedIndices = new List<int>();
+                        for (int i = 0; i < keySignatureList.Count - 1; i++)
+                        {
+                            if (keySignatureList[i].AbsoluteTime == keySignatureList[i + 1].AbsoluteTime)
+                            {
+                                duplicatedIndices.Add(i);
+                            }
+                        }
+                        for (int i = duplicatedIndices.Count - 1; i >= 0; i--)
+                        {
+                            keySignatureList.RemoveAt(duplicatedIndices[i]);
+                        }
+
+                        #endregion
+
+                        int measureCount = 0;   // 이 곡의 최장 마디 번호
+
+                        // TPB: Ticks per beat (= mf.DeltaTicksPerQuarterNote)
                         // 32분음표는 TPB / 8, 한 마디는 TPB * 4 * 분자 / 분모
                         // 새로운 박자표가 도입되면 그 앞에서 마디를 끊는다.
-                        // 박자표가 없는 경우도 처리
+                        // 박자표가 없거나 여러 개 겹쳐 있는 경우도 처리
 
                         for (int n = 0; n < mf.Tracks; n++)
                         {
+                            #region Load original score
+
                             if (mf.Events[n].OfType<NoteOnEvent>().Count() == 0) continue;
                             TrackInfo track = new TrackInfo();
                             track.songName = file.Name.Substring(0, file.Name.LastIndexOf('.'));
                             track.trackNum = n;
                             track.measures = new List<Measure>();
-                            track.notes = new List<Note>();
+                            track.score = new List<Note>();
 
                             int measureNum = 0;
                             long nextMeasureTime = 0;
@@ -110,6 +144,9 @@ namespace MidiAnalyzer
                                 timeSignatureList[0].Numerator,
                                 1 << timeSignatureList[0].Denominator);
                             long nextTimeSignatureTime = timeSignatureList[1].AbsoluteTime;
+
+                            int keySignatureIndex = 0;
+                            long nextKeySignatureTime = keySignatureList[1].AbsoluteTime;
 
                             foreach (var midiEvent in mf.Events[n])
                             {
@@ -130,6 +167,13 @@ namespace MidiAnalyzer
                                             m.measureNum = measureNum;
                                             m.startTime = nextMeasureTime;
                                             m.timeSignature = timeSignature;
+
+                                            while (m.startTime >= nextKeySignatureTime && keySignatureIndex <= keySignatureList.Count - 3)
+                                            {
+                                                keySignatureIndex++;
+                                                nextKeySignatureTime = keySignatureList[keySignatureIndex + 1].AbsoluteTime;
+                                            }
+                                            m.key = Measure.GetKeyFromKeySignature(keySignatureList[keySignatureIndex]);
 
                                             nextMeasureTime += mf.DeltaTicksPerQuarterNote * 4 * timeSignature.Key / timeSignature.Value;
 
@@ -172,6 +216,13 @@ namespace MidiAnalyzer
                                                 m.startTime = timeSignatureList[timeSignatureIndex].AbsoluteTime;
                                                 m.timeSignature = timeSignature;
 
+                                                while (m.startTime >= nextKeySignatureTime && keySignatureIndex <= keySignatureList.Count - 3)
+                                                {
+                                                    keySignatureIndex++;
+                                                    nextKeySignatureTime = keySignatureList[keySignatureIndex + 1].AbsoluteTime;
+                                                }
+                                                m.key = Measure.GetKeyFromKeySignature(keySignatureList[keySignatureIndex]);
+
                                                 nextMeasureTime = timeSignatureList[timeSignatureIndex].AbsoluteTime + 
                                                     mf.DeltaTicksPerQuarterNote * 4 * timeSignature.Key / timeSignature.Value;
 
@@ -181,27 +232,35 @@ namespace MidiAnalyzer
                                         }
                                     }
                                     NoteOnEvent noteOn = (NoteOnEvent)midiEvent;
+                                    Note note;
                                     if (RESOLUTION_64)
                                     {
-                                        track.notes.Add(new Note(
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                                        note = new Note(
                                             noteOn.NoteNumber,
                                             noteOn.Velocity,
                                             (int)Math.Round(noteOn.NoteLength / (mf.DeltaTicksPerQuarterNote / 16f)),
                                             measureNum,
                                             (int)Math.Round((noteOn.AbsoluteTime - barTimes.Last()) / (mf.DeltaTicksPerQuarterNote / 16f)),
-                                            noteOn.Channel));
+                                            noteOn.Channel);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
                                     }
                                     else
                                     {
-                                        track.notes.Add(new Note(
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                                        note = new Note(
                                             noteOn.NoteNumber,
                                             noteOn.Velocity,
                                             (int)Math.Round(noteOn.NoteLength / (mf.DeltaTicksPerQuarterNote / 8f)) * 2,
                                             measureNum,
                                             (int)Math.Round((noteOn.AbsoluteTime - barTimes.Last()) / (mf.DeltaTicksPerQuarterNote / 8f)) * 2,
-                                            noteOn.Channel));
+                                            noteOn.Channel);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
                                     }
+                                    track.score.Add(note);
+                                    track.measures.Last().originalScore.Add(note);
                                 }
+
                                 /*
                                 if (!MidiEvent.IsNoteOff(midiEvent))
                                 {
@@ -211,25 +270,100 @@ namespace MidiAnalyzer
                                 */
                             }
 
+                            if (measureCount < measureNum)
+                            {
+                                measureCount = measureNum;
+                            }
+
                             Console.WriteLine(track.songName + ": track " + track.trackNum);
-                            foreach (Note note in track.notes)
+                            /*
+                            foreach (Note note in track.score)
                             {
                                 Console.WriteLine(note.ToString());
                             }
                             Console.WriteLine("------------------------------------------------");
+                            */
                             foreach (Measure measure in track.measures)
                             {
                                 Console.WriteLine(measure.ToString());
                             }
                             Console.WriteLine("------------------------------------------------");
+
+                            #endregion
+
+                            foreach (Measure measure in track.measures)
+                            {
+                                #region Construct monophonic score
+
+                                foreach (Note note in measure.originalScore)
+                                {
+                                    Note note2 = measure.monophonicScore.Find(e => e.Measure == note.Measure && e.Position == note.Position);
+                                    if (note2 != null && note.Pitch * 4 + note.Velocity > note2.Pitch * 4 + note2.Velocity)
+                                    {
+                                        // 음 높이와 음 세기를 모두 고려하여, monophonic melody에 남길 음표 선정
+                                        measure.monophonicScore.Remove(note2);
+                                        measure.monophonicScore.Add(note);
+                                    }
+                                    else if (note2 == null)
+                                    {
+                                        measure.monophonicScore.Add(note);
+                                    }
+                                }
+                                measure.monophonicScore.Sort((e1, e2) =>
+                                {
+                                    if (e1.Measure != e2.Measure) return Math.Sign(e1.Measure - e2.Measure);
+                                    else return e1.Position - e2.Position;
+                                });
+
+                                foreach (Note note in measure.monophonicScore)
+                                {
+                                    Console.WriteLine(note.ToString());
+                                }
+
+                                #endregion
+
+
+                                Console.WriteLine("-------------");
+                            }
+
                             tracks.Add(track);
                         }
+
+                        foreach (TrackInfo track in tracks.FindAll(e => e.songName == file.Name.Substring(0, file.Name.LastIndexOf('.'))))
+                        {
+                            track.measureCount = measureCount;
+                        }
+
+
+                        #region Recognize chord
+
+                        for (int m = 0; m < measureCount; m++)
+                        {
+                            List<Note> scoreFromAllTracks = new List<Note>();
+                            foreach (TrackInfo track in tracks.FindAll(e => e.songName == file.Name.Substring(0, file.Name.LastIndexOf('.'))))
+                            {
+                                if (m >= track.measures.Count) break;
+                                scoreFromAllTracks.AddRange(track.measures[m].originalScore);
+                            }
+
+                            Chord chord = Chord.RecognizeChordFromScore(scoreFromAllTracks);
+
+                            foreach (TrackInfo track in tracks.FindAll(e => e.songName == file.Name.Substring(0, file.Name.LastIndexOf('.'))))
+                            {
+                                if (m >= track.measures.Count) break;
+                                track.measures[m].chord = chord;
+                            }
+
+                            if (chord.type != Chord.Type.NULL)
+                                Console.WriteLine("chord of measure " + (m + 1) + ": " + chord.root + chord.type);
+                        }
+
+                        #endregion
                     }
                 }
             }
         }
 
-        /*
         private string ToMBT(long eventTime, int ticksPerQuarterNote, TimeSignatureEvent timeSignature)
         {
             int beatsPerBar = timeSignature == null ? 4 : timeSignature.Numerator;
@@ -240,6 +374,5 @@ namespace MidiAnalyzer
             long tick = eventTime % ticksPerBeat;
             return String.Format("{0}:{1}:{2}", bar, beat, tick);
         }
-        */
     }
 }

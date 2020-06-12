@@ -33,7 +33,8 @@ namespace MidiAnalyzer
     {
         public string songName;
         public int trackNum;
+        public int measureCount;    // max(# of measure in all tracks with the same songName)
         public List<Measure> measures;
-        public List<Note> notes;
+        public List<Note> score;
     }
 }

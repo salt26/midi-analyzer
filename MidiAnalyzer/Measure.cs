@@ -21,11 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-using System;
+using NAudio.Midi;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MidiAnalyzer
 {
@@ -51,9 +48,74 @@ namespace MidiAnalyzer
         public int melodicContourID;
         // Time signature is always fixed to 4/4.
 
+        public Measure()
+        {
+            originalScore = new List<Note>();
+            monophonicScore = new List<Note>();
+        }
+
         public override string ToString()
         {
-            return "Measure: measure = " + measureNum + ", startTime = " + startTime + ", endTime = " + endTime + ", timeSignature = " + timeSignature.Key + "/" + timeSignature.Value;
+            return "Measure: measure = " + measureNum + ", keySignature = " + key.ToString() + //", startTime = " + startTime + ", endTime = " + endTime +
+                ", timeSignature = " + timeSignature.Key + "/" + timeSignature.Value + ", noteCount = " + originalScore.Count;
+        }
+
+        public static Key GetKeyFromKeySignature(KeySignatureEvent keySignature)
+        {
+            // major = 0 ~ 11 / minor = 21 ~ 23, 12 ~ 20
+            int k = 0;
+
+            switch (keySignature.SharpsFlats)
+            {
+                case 0:     // C
+                    break;
+                case -5:    // Db = C#
+                case 7:
+                    k += 1;
+                    break;  
+                case 2:     // D
+                    k += 2;
+                    break;
+                case -3:    // Eb
+                    k += 3;
+                    break;
+                case 4:     // E
+                    k += 4;
+                    break;
+                case -1:    // F
+                    k += 5;
+                    break;
+                case -6:    // Gb = F#
+                case 6:
+                    k += 6;
+                    break;
+                case 1:     // G
+                    k += 7;
+                    break;
+                case -4:    // Ab
+                    k += 8;
+                    break;
+                case 3:     // A
+                    k += 9;
+                    break;
+                case -2:    // Bb
+                    k += 10;
+                    break;
+                case 5:     // B = Cb
+                case -7:
+                    k += 11;
+                    break;
+            }
+            if (keySignature.MajorMinor == 0)
+            {
+                // major
+                return (Key)k;
+            }
+            else
+            {
+                // minor
+                return (Key)(((k + 9) % 12) + 12);
+            }
         }
     }
 }

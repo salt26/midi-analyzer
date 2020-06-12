@@ -754,7 +754,7 @@ namespace MidiAnalyzer
 
             int lenThis = this.noteList.Count;
             int lenOther = other.noteList.Count;
-            MelodicContour rp;
+            MelodicContour mc;
             LinkedListNode<MelodicContourNote> nodeB;
             List<List<DistanceTable>> distanceTable =
                 new List<List<DistanceTable>>(lenThis + 1);
@@ -776,7 +776,9 @@ namespace MidiAnalyzer
                         var list = new List<KeyValuePair<int, OperationInfo.Type>>();
                         distanceTable[i][j] = new DistanceTable(0, list);
                         if (DISTANCE_DEBUG)
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
                             Console.Write(distanceTable[i][j].Distance + "\t");     // TODO
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
                         continue;
                     }
 
@@ -788,26 +790,26 @@ namespace MidiAnalyzer
                         foreach (List<KeyValuePair<int, OperationInfo.Type>> path in distanceTable[i - 1][j].Paths)
                         {
                             List<OperationInfo> operations = PathToOperations(path, Copy(this, i - 1), Copy(other, j - 1));
-                            rp = Copy(this, i - 1);
+                            mc = Copy(this, i - 1);
 
-                            MelodicContour tempRP = rp.Copy();
+                            MelodicContour tempMC = mc.Copy();
                             List<KeyValuePair<int, OperationInfo.Type>> tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
                             tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(0, OperationInfo.Type.Delete));
                             costs.Add(new DistanceTable(
-                                distanceTable[i - 1][j].Distance + tempRP.DeleteNote(tempRP.noteList.Count - 1),
+                                distanceTable[i - 1][j].Distance + tempMC.DeleteNote(tempMC.noteList.Count - 1),
                                 tempPath));
 
                             for (int k = 0; k < operations.Count; k++)
                             {
-                                if (rp.PerformOperation(operations[k]) == INVALID_COST)
+                                if (mc.PerformOperation(operations[k]) == INVALID_COST)
                                 {
                                     break;
                                 }
-                                tempRP = rp.Copy();
+                                tempMC = mc.Copy();
                                 tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
                                 tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(k + 1, OperationInfo.Type.Delete));
                                 costs.Add(new DistanceTable(
-                                    distanceTable[i - 1][j].Distance + tempRP.DeleteNote(tempRP.noteList.Count - 1),
+                                    distanceTable[i - 1][j].Distance + tempMC.DeleteNote(tempMC.noteList.Count - 1),
                                     tempPath));
                             }
                         }
@@ -820,27 +822,27 @@ namespace MidiAnalyzer
                         foreach (List<KeyValuePair<int, OperationInfo.Type>> path in distanceTable[i][j - 1].Paths)
                         {
                             List<OperationInfo> operations = PathToOperations(path, Copy(this, i - 1), Copy(other, j - 1));
-                            rp = Copy(this, i - 1);
+                            mc = Copy(this, i - 1);
                             nodeB = other.GetNoteNodeByIndex(j - 1);
 
-                            MelodicContour tempRP = rp.Copy();
+                            MelodicContour tempMC = mc.Copy();
                             List<KeyValuePair<int, OperationInfo.Type>> tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
                             tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(0, OperationInfo.Type.Insert));
                             costs.Add(new DistanceTable(
-                                distanceTable[i][j - 1].Distance + tempRP.InsertNote(tempRP.noteList.Count, nodeB.Value.Copy()),
+                                distanceTable[i][j - 1].Distance + tempMC.InsertNote(tempMC.noteList.Count, nodeB.Value.Copy()),
                                 tempPath));
 
                             for (int k = 0; k < operations.Count; k++)
                             {
-                                if (rp.PerformOperation(operations[k]) == INVALID_COST)
+                                if (mc.PerformOperation(operations[k]) == INVALID_COST)
                                 {
                                     break;
                                 }
-                                tempRP = rp.Copy();
+                                tempMC = mc.Copy();
                                 tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
                                 tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(k + 1, OperationInfo.Type.Insert));
                                 costs.Add(new DistanceTable(
-                                    distanceTable[i][j - 1].Distance + tempRP.InsertNote(tempRP.noteList.Count, nodeB.Value.Copy()),
+                                    distanceTable[i][j - 1].Distance + tempMC.InsertNote(tempMC.noteList.Count, nodeB.Value.Copy()),
                                     tempPath));
                             }
                         }
@@ -853,27 +855,27 @@ namespace MidiAnalyzer
                         foreach (List<KeyValuePair<int, OperationInfo.Type>> path in distanceTable[i - 1][j - 1].Paths)
                         {
                             List<OperationInfo> operations = PathToOperations(path, Copy(this, i - 1), Copy(other, j - 1));
-                            rp = Copy(this, i - 1);
+                            mc = Copy(this, i - 1);
                             nodeB = other.GetNoteNodeByIndex(j - 1);
 
-                            MelodicContour tempRP = rp.Copy();
+                            MelodicContour tempMC = mc.Copy();
                             List<KeyValuePair<int, OperationInfo.Type>> tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
                             tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(0, OperationInfo.Type.Replace));
                             costs.Add(new DistanceTable(
-                                distanceTable[i - 1][j - 1].Distance + tempRP.ReplaceNote(tempRP.noteList.Count - 1, nodeB.Value.Copy()),
+                                distanceTable[i - 1][j - 1].Distance + tempMC.ReplaceNote(tempMC.noteList.Count - 1, nodeB.Value.Copy()),
                                 tempPath));
 
                             for (int k = 0; k < operations.Count; k++)
                             {
-                                if (rp.PerformOperation(operations[k]) == INVALID_COST)
+                                if (mc.PerformOperation(operations[k]) == INVALID_COST)
                                 {
                                     break;
                                 }
-                                tempRP = rp.Copy();
+                                tempMC = mc.Copy();
                                 tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
                                 tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(k + 1, OperationInfo.Type.Replace));
                                 costs.Add(new DistanceTable(
-                                    distanceTable[i - 1][j - 1].Distance + tempRP.ReplaceNote(tempRP.noteList.Count - 1, nodeB.Value.Copy()),
+                                    distanceTable[i - 1][j - 1].Distance + tempMC.ReplaceNote(tempMC.noteList.Count - 1, nodeB.Value.Copy()),
                                     tempPath));
                             }
                         }
@@ -919,19 +921,23 @@ namespace MidiAnalyzer
                         }
                     }
                     if (DISTANCE_DEBUG)
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
                         Console.Write(distanceTable[i][j].Distance + "\t");  // TODO
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
 
-                    #endregion
+                        #endregion
                 }
 
                 if (DISTANCE_DEBUG)
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
                     Console.WriteLine();
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
 
             #region Delay 연산
 
-            rp = this.Copy();
-            int delayCost = rp.DelayNotes(other.firstRestDuration);
+            mc = this.Copy();
+            int delayCost = mc.DelayNotes(other.firstRestDuration);
 
             #endregion
 
@@ -940,29 +946,31 @@ namespace MidiAnalyzer
             {
                 #region 위에서 계산한 연산들의 비용과 수행 가능 여부가 실제와 같은지 테스트
 
-                MelodicContour rpForTest = this.Copy();
-                List<OperationInfo> resultOperations = PathToOperations(distanceTable[lenThis][lenOther].Paths[0], rpForTest, other.Copy(), distanceTable);
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                MelodicContour mcForTest = this.Copy();
+                List<OperationInfo> resultOperations = PathToOperations(distanceTable[lenThis][lenOther].Paths[0], mcForTest, other.Copy(), distanceTable);
                 List<OperationInfo> inverseOperations = new List<OperationInfo>();
                 foreach (OperationInfo o in resultOperations)
                 {
                     o.Print();
-                    Console.WriteLine(rpForTest.PerformOperation(o));
+                    Console.WriteLine(mcForTest.PerformOperation(o));
                     inverseOperations.Insert(0, o.Inverse());
                 }
-                rpForTest.Print();
+                mcForTest.Print();
 
                 #endregion
 
                 #region 반대 방향으로 역연산들을 취해주면 최적 거리가 같게 나오는지 테스트 -> 같게 나오지 않는 예제가 존재한다!
 
                 Console.WriteLine("Inverse test");
-                MelodicContour rpForTest2 = other.Copy();
+                MelodicContour mcForTest2 = other.Copy();
                 foreach (OperationInfo o in inverseOperations)
                 {
                     o.Print();
-                    Console.WriteLine(rpForTest2.PerformOperation(o));
+                    Console.WriteLine(mcForTest2.PerformOperation(o));
                 }
-                rpForTest2.Print();
+                mcForTest2.Print();
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
 
                 #endregion
             }
@@ -1250,16 +1258,16 @@ namespace MidiAnalyzer
         /// </summary>
         private static MelodicContour Copy(MelodicContour original, int index)
         {
-            MelodicContour rp = new MelodicContour(original.firstRestDuration);
+            MelodicContour mc = new MelodicContour(original.firstRestDuration);
             int i = 0;
             LinkedListNode<MelodicContourNote> node = original.noteList.First;
             while (i <= index && node != null)
             {
-                rp.InsertNote(i, node.Value.Copy());
+                mc.InsertNote(i, node.Value.Copy());
                 node = node.Next;
                 i++;
             }
-            return rp;
+            return mc;
         }
 
         /// <summary>

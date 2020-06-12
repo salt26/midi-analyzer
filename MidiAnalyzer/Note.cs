@@ -76,7 +76,7 @@ namespace MidiAnalyzer
         private int position;
 
         /// <summary>
-        /// 음표의 마디 내 위치(0 ~ 63). 4/4박에서 한 마디를 64등분한 길이를 기준으로 합니다.
+        /// 음표의 마디 내 위치(0 이상). 4/4박에서 한 마디를 64등분한 길이를 기준으로 합니다.
         /// </summary>
         public int Position
         {
@@ -110,7 +110,7 @@ namespace MidiAnalyzer
         /// <param name="velocity">음 세기(1 ~ 127).</param>
         /// <param name="rhythm">음표의 길이(1 이상). 4/4박에서 한 마디를 64등분한 길이를 기준으로 합니다. 예) 64: 온음표 / 16: 4분음표 / 4: 16분음표 / 1: 64분음표</param>
         /// <param name="measure">음표가 위치한 마디 번호(0부터 시작).</param>
-        /// <param name="position">음표의 마디 내 위치(0 ~ 63). 4/4박에서 한 마디를 64등분한 길이를 기준으로 합니다.</param>
+        /// <param name="position">음표의 마디 내 위치(0 이상). 4/4박에서 한 마디를 64등분한 길이를 기준으로 합니다.</param>
         /// <param name="staff">음표가 놓일 Staff 번호(0 ~ 15). 9번 Staff는 타악기 전용 Staff입니다.</param>
         public Note(int pitch, int velocity, int rhythm, long measure, int position, int staff = 0)
         {
@@ -123,11 +123,10 @@ namespace MidiAnalyzer
             if (rhythm < 1) rhythm = 16;
             this.rhythm = rhythm;
 
-            if (position < 0 || position > 63) measure += position / 64;
             if (measure < 0) measure = 0;
             this.measure = measure;
 
-            if (position < 0 || position > 63) position %= 64;
+            if (position < 0) position = 0;
             this.position = position;
 
             if (staff < 0 || staff > 15) staff = 0;
@@ -153,11 +152,10 @@ namespace MidiAnalyzer
             if (rhythm < 1) rhythm = 16;
             this.rhythm = rhythm;
 
-            if (position < 0 || position > 63) measure += position / 64;
             if (measure < 0) measure = 0;
             this.measure = measure;
 
-            if (position < 0 || position > 63) position %= 64;
+            if (position < 0) position = 0;
             this.position = position;
 
             if (staff < 0 || staff > 15) staff = 0;
@@ -166,6 +164,7 @@ namespace MidiAnalyzer
 
         /// <summary>
         /// 이 음표를 연주하기 위해 Midi message pair 리스트로 변환합니다.
+        /// 4/4박자를 사용한다고 가정합니다.
         /// (이 Pair들은 재생하거나 저장할 때 Message로 번역됩니다.)
         /// </summary>
         /// <returns></returns>
