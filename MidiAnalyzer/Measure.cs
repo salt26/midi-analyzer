@@ -24,22 +24,36 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace MidiAnalyzer
 {
-    static class Program
+    public class Measure
     {
-        /// <summary>
-        /// 해당 애플리케이션의 주 진입점입니다.
-        /// </summary>
-        [STAThread]
-        static void Main()
+        public enum Key
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B,
+            Cm, Dbm, Dm, Ebm, Em, Fm, Gbm, Gm, Abm, Am, Bbm, Bm
+        }
+
+        public string songName;
+        public int trackNum;
+        public int measureNum;
+        public long startTime;
+        public long endTime;
+        public Key key;
+        public KeyValuePair<int, int> timeSignature;
+        public List<Note> originalScore;
+        public List<Note> monophonicScore;
+        public Chord chord;
+        public MelodicContour melodicContour;
+        public int melodicContourID;
+        // Time signature is always fixed to 4/4.
+
+        public override string ToString()
+        {
+            return "Measure: measure = " + measureNum + ", startTime = " + startTime + ", endTime = " + endTime + ", timeSignature = " + timeSignature.Key + "/" + timeSignature.Value;
         }
     }
 }

@@ -7,6 +7,7 @@
 *.midi
 *.MID
 *.MIDI
+ignore/
 
 # User-specific files
 *.rsuser

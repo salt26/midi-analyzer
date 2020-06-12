@@ -1,4 +1,27 @@
-﻿using System;
+﻿/*
+MIT License
+
+Copyright (c) 2020 salt26
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,6 +37,10 @@ namespace MidiAnalyzer
 {
     public partial class Form1 : Form
     {
+        private const bool RESOLUTION_64 = true;    // 길이의 최소 단위를 false이면 32분음표로, true이면 64분음표로 사용
+
+        public List<TrackInfo> tracks = new List<TrackInfo>();
+
         public Form1()
         {
             InitializeComponent();
@@ -21,7 +48,7 @@ namespace MidiAnalyzer
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            string path = @".\..\..\midi";
+            string path = @".\..\..\..\midi";
             if (Directory.Exists(path))
             {
                 DirectoryInfo di = new DirectoryInfo(path);
@@ -37,9 +64,182 @@ namespace MidiAnalyzer
 
                         Console.WriteLine("Format {0}, Tracks {1}, Delta Ticks Per Quarter Note {2}",
                             mf.FileFormat, mf.Tracks, mf.DeltaTicksPerQuarterNote);
+                        //var timeSignature = mf.Events[0].OfType<TimeSignatureEvent>().FirstOrDefault();
+                        
+                        var timeSignatureList = mf.Events[0].OfType<TimeSignatureEvent>().ToList();
+                        timeSignatureList.Sort((e1, e2) => Math.Sign(e1.AbsoluteTime - e2.AbsoluteTime));
+                        if (timeSignatureList.Count == 0 || timeSignatureList[0].AbsoluteTime > 0)
+                        {
+                            timeSignatureList.Insert(0, new TimeSignatureEvent(0, 4, 2, 24, 8));
+                        }
+                        timeSignatureList.Add(new TimeSignatureEvent(long.MaxValue, 4, 2, 24, 8));
+
+                        // 이 아래 코드와 같은 알고리즘을 skyline 구현 시 사용할 수 있다.
+                        List<int> duplicatedIndices = new List<int>();
+                        for (int i = 0; i < timeSignatureList.Count - 1; i++)
+                        {
+                            if (timeSignatureList[i].AbsoluteTime == timeSignatureList[i + 1].AbsoluteTime)
+                            {
+                                duplicatedIndices.Add(i);
+                            }
+                        }
+                        for (int i = duplicatedIndices.Count - 1; i >= 0; i--)
+                        {
+                            timeSignatureList.RemoveAt(duplicatedIndices[i]);
+                        }
+
+                        // 32분음표는 TPB / 8, 한 마디는 TPB * 4 * 분자 / 분모
+                        // 새로운 박자표가 도입되면 그 앞에서 마디를 끊는다.
+                        // 박자표가 없는 경우도 처리
+
+                        for (int n = 0; n < mf.Tracks; n++)
+                        {
+                            if (mf.Events[n].OfType<NoteOnEvent>().Count() == 0) continue;
+                            TrackInfo track = new TrackInfo();
+                            track.songName = file.Name.Substring(0, file.Name.LastIndexOf('.'));
+                            track.trackNum = n;
+                            track.measures = new List<Measure>();
+                            track.notes = new List<Note>();
+
+                            int measureNum = 0;
+                            long nextMeasureTime = 0;
+                            List<long> barTimes = new List<long>();
+
+                            int timeSignatureIndex = 0;
+                            KeyValuePair<int, int> timeSignature = new KeyValuePair<int, int>(
+                                timeSignatureList[0].Numerator,
+                                1 << timeSignatureList[0].Denominator);
+                            long nextTimeSignatureTime = timeSignatureList[1].AbsoluteTime;
+
+                            foreach (var midiEvent in mf.Events[n])
+                            {
+                                if (MidiEvent.IsNoteOn(midiEvent))
+                                {
+                                    while ((midiEvent.AbsoluteTime >= nextTimeSignatureTime && timeSignatureIndex < timeSignatureList.Count - 1) ||
+                                        midiEvent.AbsoluteTime >= nextMeasureTime)
+                                    {
+                                        bool b = false;
+                                        if (midiEvent.AbsoluteTime >= nextMeasureTime)
+                                        {
+                                            measureNum++;
+                                            barTimes.Add(nextMeasureTime);
+
+                                            Measure m = new Measure();
+                                            m.songName = track.songName;
+                                            m.trackNum = track.trackNum;
+                                            m.measureNum = measureNum;
+                                            m.startTime = nextMeasureTime;
+                                            m.timeSignature = timeSignature;
+
+                                            nextMeasureTime += mf.DeltaTicksPerQuarterNote * 4 * timeSignature.Key / timeSignature.Value;
+
+                                            m.endTime = nextMeasureTime;
+                                            track.measures.Add(m);
+
+                                            b = true;
+                                        }
+                                        if (midiEvent.AbsoluteTime >= nextTimeSignatureTime && timeSignatureIndex <= timeSignatureList.Count - 3)
+                                        {
+                                            timeSignatureIndex++;
+                                            nextTimeSignatureTime = timeSignatureList[timeSignatureIndex + 1].AbsoluteTime;
+                                            if (b)
+                                            {
+                                                nextMeasureTime -= mf.DeltaTicksPerQuarterNote * 4 * timeSignature.Key / timeSignature.Value;
+                                            }
+                                            timeSignature = new KeyValuePair<int, int>(timeSignatureList[timeSignatureIndex].Numerator,
+                                                1 << timeSignatureList[timeSignatureIndex].Denominator);
+
+                                            if (b)
+                                            {
+                                                nextMeasureTime += mf.DeltaTicksPerQuarterNote * 4 * timeSignature.Key / timeSignature.Value;
+
+                                                track.measures.Last().timeSignature = timeSignature;
+                                                track.measures.Last().endTime = nextMeasureTime;
+                                            }
+                                            if (!b)
+                                            {
+                                                // 마디 중간에 박자표가 튀어나오는 경우 박자표 앞에 세로선을 그어 마디를 구분한다.
+                                                // 이로써 한 마디 안에는 하나의 박자표만 적용됨을 보장한다.
+                                                measureNum++;
+                                                barTimes.Add(timeSignatureList[timeSignatureIndex].AbsoluteTime);
+
+                                                track.measures.Last().endTime = timeSignatureList[timeSignatureIndex].AbsoluteTime;
+
+                                                Measure m = new Measure();
+                                                m.songName = track.songName;
+                                                m.trackNum = track.trackNum;
+                                                m.measureNum = measureNum;
+                                                m.startTime = timeSignatureList[timeSignatureIndex].AbsoluteTime;
+                                                m.timeSignature = timeSignature;
+
+                                                nextMeasureTime = timeSignatureList[timeSignatureIndex].AbsoluteTime + 
+                                                    mf.DeltaTicksPerQuarterNote * 4 * timeSignature.Key / timeSignature.Value;
+
+                                                m.endTime = nextMeasureTime;
+                                                track.measures.Add(m);
+                                            }
+                                        }
+                                    }
+                                    NoteOnEvent noteOn = (NoteOnEvent)midiEvent;
+                                    if (RESOLUTION_64)
+                                    {
+                                        track.notes.Add(new Note(
+                                            noteOn.NoteNumber,
+                                            noteOn.Velocity,
+                                            (int)Math.Round(noteOn.NoteLength / (mf.DeltaTicksPerQuarterNote / 16f)),
+                                            measureNum,
+                                            (int)Math.Round((noteOn.AbsoluteTime - barTimes.Last()) / (mf.DeltaTicksPerQuarterNote / 16f)),
+                                            noteOn.Channel));
+                                    }
+                                    else
+                                    {
+                                        track.notes.Add(new Note(
+                                            noteOn.NoteNumber,
+                                            noteOn.Velocity,
+                                            (int)Math.Round(noteOn.NoteLength / (mf.DeltaTicksPerQuarterNote / 8f)) * 2,
+                                            measureNum,
+                                            (int)Math.Round((noteOn.AbsoluteTime - barTimes.Last()) / (mf.DeltaTicksPerQuarterNote / 8f)) * 2,
+                                            noteOn.Channel));
+                                    }
+                                }
+                                /*
+                                if (!MidiEvent.IsNoteOff(midiEvent))
+                                {
+                                    var timeSignature2 = mf.Events[0].OfType<TimeSignatureEvent>().FirstOrDefault();
+                                    Console.WriteLine("{0} {1}\r\n", ToMBT(midiEvent.AbsoluteTime, mf.DeltaTicksPerQuarterNote, timeSignature2), midiEvent);
+                                }
+                                */
+                            }
+
+                            Console.WriteLine(track.songName + ": track " + track.trackNum);
+                            foreach (Note note in track.notes)
+                            {
+                                Console.WriteLine(note.ToString());
+                            }
+                            Console.WriteLine("------------------------------------------------");
+                            foreach (Measure measure in track.measures)
+                            {
+                                Console.WriteLine(measure.ToString());
+                            }
+                            Console.WriteLine("------------------------------------------------");
+                            tracks.Add(track);
+                        }
                     }
                 }
             }
         }
+
+        /*
+        private string ToMBT(long eventTime, int ticksPerQuarterNote, TimeSignatureEvent timeSignature)
+        {
+            int beatsPerBar = timeSignature == null ? 4 : timeSignature.Numerator;
+            int ticksPerBar = timeSignature == null ? ticksPerQuarterNote * 4 : (timeSignature.Numerator * ticksPerQuarterNote * 4) / (1 << timeSignature.Denominator);
+            int ticksPerBeat = ticksPerBar / beatsPerBar;
+            long bar = 1 + (eventTime / ticksPerBar);
+            long beat = 1 + ((eventTime % ticksPerBar) / ticksPerBeat);
+            long tick = eventTime % ticksPerBeat;
+            return String.Format("{0}:{1}:{2}", bar, beat, tick);
+        }
+        */
     }
 }
