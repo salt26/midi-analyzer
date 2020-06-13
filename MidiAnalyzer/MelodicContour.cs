@@ -88,6 +88,48 @@ namespace MidiAnalyzer
         }
 
         /// <summary>
+        /// 악보(음표 목록)로부터 새 멜로디 형태를 생성합니다.
+        /// 이 멜로디 형태에 속하는 각 MelodicContourNote의 길이는,
+        /// 음표의 Rhythm와 관계 없이 한 음표와 바로 다음 음표 사이의 Position 차이로 설정됩니다.
+        /// </summary>
+        /// <param name="monophonicScore">monophony인 악보</param>
+        /// <param name="scoreLength">악보의 길이. 64분음표가 몇 개 들어가는지를 기준으로 합니다.
+        /// 이 길이보다 같거나 뒤에 놓인 음표는 고려하지 않습니다. 예) 4/4박자에서 한 마디 길이: 64</param>
+        public MelodicContour(List<Note> monophonicScore, int scoreLength = 64)
+        {
+            List<Note> score = new List<Note>(monophonicScore);
+            score.Sort((e1, e2) =>
+            {
+                if (e1.Measure != e2.Measure) return Math.Sign(e1.Measure - e2.Measure);
+                else return e1.Position - e2.Position;
+            });
+
+            long startMeasure = 0;
+            Note endNote = null;
+            if (score.Count > 0)
+            {
+                startMeasure = score[0].Measure;
+                endNote = new Note(1, 1, 1, startMeasure, scoreLength, 0, score[0].TimeSignature.Key, score[0].TimeSignature.Value);
+                this.DelayNotes(score[0].Position);
+            }
+
+            for (int i = 0; i < score.Count; i++)
+            {
+                if (score[i].GetAbsolutePosition() >= endNote.GetAbsolutePosition())
+                    break;
+
+                if (i < score.Count - 1)
+                    this.InsertNote(noteList.Count,
+                        (int)(score[i + 1].GetAbsolutePosition() - score[i].GetAbsolutePosition()),
+                        score[i].Pitch);
+                else                                    // Last note
+                    this.InsertNote(noteList.Count,
+                        (int)(endNote.GetAbsolutePosition() - score[i].GetAbsolutePosition()),
+                        score[i].Pitch);
+            }
+        }
+
+        /// <summary>
         /// 불가능한 편집 연산을 수행한 경우 발생하는 비용입니다.
         /// 무한대라고 취급하면 됩니다.
         /// </summary>
@@ -1607,7 +1649,7 @@ namespace MidiAnalyzer
     {
         /// <summary>
         /// 음표의 길이.
-        /// 한 마디를 32분음표 32개로 쪼갰을 때
+        /// 한 마디를 64분음표 64개로 쪼갰을 때
         /// 음표가 얼만큼의 길이로 지속되는지 나타냅니다.
         /// 존재하는 음표의 길이는 1 이상의 값을 갖습니다.
         /// 존재하지 않는 음표의 길이는 -1입니다.
@@ -1643,7 +1685,7 @@ namespace MidiAnalyzer
         /// 길이를 0 이하로 주면 존재하지 않는 음표를 표현하는 더미 인스턴스를 생성합니다.
         /// </summary>
         /// <param name="duration">음표의 길이.
-        /// 한 마디를 32분음표 32개로 쪼갰을 때
+        /// 한 마디를 64분음표 64개로 쪼갰을 때
         /// 음표가 얼만큼의 길이로 지속되는지 나타냅니다.
         /// 1 이상의 값을 갖습니다.</param>
         /// <param name="pitchCluster">클러스터 번호.

@@ -242,7 +242,9 @@ namespace MidiAnalyzer
                                             (int)Math.Round(noteOn.NoteLength / (mf.DeltaTicksPerQuarterNote / 16f)),
                                             measureNum,
                                             (int)Math.Round((noteOn.AbsoluteTime - barTimes.Last()) / (mf.DeltaTicksPerQuarterNote / 16f)),
-                                            noteOn.Channel);
+                                            noteOn.Channel,
+                                            timeSignature.Key,
+                                            timeSignature.Value);
 #pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
                                     }
                                     else
@@ -254,7 +256,9 @@ namespace MidiAnalyzer
                                             (int)Math.Round(noteOn.NoteLength / (mf.DeltaTicksPerQuarterNote / 8f)) * 2,
                                             measureNum,
                                             (int)Math.Round((noteOn.AbsoluteTime - barTimes.Last()) / (mf.DeltaTicksPerQuarterNote / 8f)) * 2,
-                                            noteOn.Channel);
+                                            noteOn.Channel,
+                                            timeSignature.Key,
+                                            timeSignature.Value);
 #pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
                                     }
                                     track.score.Add(note);
@@ -322,6 +326,13 @@ namespace MidiAnalyzer
 
                                 #endregion
 
+                                #region Consturct melodic contour
+
+                                measure.melodicContour = new MelodicContour(measure.monophonicScore,
+                                    64 * measure.timeSignature.Key / measure.timeSignature.Value);
+                                measure.melodicContour.Print();
+
+                                #endregion
 
                                 Console.WriteLine("-------------");
                             }
