@@ -38,5 +38,6 @@ namespace MidiAnalyzer
         public List<Measure> measures;
         public List<Note> score;
         public DbscanResult<KeyValuePair<int, MelodicContour>> dbscanResult;
+        public List<int> longestRepeatedMelodicContourSequence;
     }
 }
