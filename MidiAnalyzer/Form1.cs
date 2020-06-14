@@ -382,7 +382,7 @@ namespace MidiAnalyzer
                                 new DbscanAlgorithm<KeyValuePair<int, MelodicContour>>((e1, e2) => e1.Value.Distance(e2.Value));
 
                             DbscanResult<KeyValuePair<int, MelodicContour>> result = dbscan.ComputeClusterDbscan(
-                                melodicContourData.ToArray(), 6, 2);
+                                melodicContourData.ToArray(), 4, 2);
 
                             track.dbscanResult = result;
 
