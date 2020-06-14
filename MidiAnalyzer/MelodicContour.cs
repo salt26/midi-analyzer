@@ -138,12 +138,12 @@ namespace MidiAnalyzer
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 길이가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
-        public const int DURATION_COST = 2;
+        public const int DURATION_COST = 3;
 
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 음 높이 변화가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
-        public const int PITCH_VARIANCE_COST = 1;
+        public const int PITCH_VARIANCE_COST = 2;
 
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 순위가 바뀌는 경우 발생하는 비용입니다.
@@ -153,7 +153,7 @@ namespace MidiAnalyzer
         /// <summary>
         /// 편집 연산(Delay)을 수행한 결과로 맨 앞 쉼표의 길이가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
-        public const int FIRST_REST_DURATION_COST = 2;
+        public const int FIRST_REST_DURATION_COST = 3;
 
         /// <summary>
         /// 음표 목록에 있는 한 음표가 직전 음표보다 높은 음을 가지면 1,

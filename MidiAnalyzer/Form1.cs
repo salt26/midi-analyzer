@@ -296,6 +296,7 @@ namespace MidiAnalyzer
 
                             #endregion
 
+                            List<KeyValuePair<int, MelodicContour>> melodicContourData = new List<KeyValuePair<int, MelodicContour>>();
 
                             foreach (Measure measure in track.measures)
                             {
@@ -338,10 +339,12 @@ namespace MidiAnalyzer
 
                                 #endregion
 
+                                melodicContourData.Add(new KeyValuePair<int, MelodicContour>(measure.measureNum, measure.melodicContour));
 
                                 //Console.WriteLine("-------------");
                             }
 
+                            /*
                             List<KeyValuePair<int, MelodicContour>> melodicContourData = new List<KeyValuePair<int, MelodicContour>>();
 
                             for (int i = 0; i <= track.measures.Count; i++)
@@ -374,6 +377,7 @@ namespace MidiAnalyzer
                                 }
                                 melodicContourData.Add(new KeyValuePair<int, MelodicContour>(i, mc));
                             }
+                            */
 
 
                             #region DBSCAN clustering for melodic contour
@@ -391,7 +395,7 @@ namespace MidiAnalyzer
                                 Console.WriteLine("Cluster " + p.Key);
                                 foreach (var point in p.Value)
                                 {
-                                    //track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = p.Key;
+                                    track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = p.Key;
                                     Console.WriteLine("Measure " + point.Feature.Key + ": " + point.PointType);
                                     point.Feature.Value.Print();
                                 }
@@ -402,10 +406,19 @@ namespace MidiAnalyzer
                             foreach (var point in result.Noise)
                             {
                                 // No cluster
-                                //track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = 0;
+                                track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = 0;
                                 Console.WriteLine("Measure " + point.Feature.Key);
                                 point.Feature.Value.Print();
                             }
+
+                            Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
+
+                            foreach (Measure m in track.measures)
+                            {
+                                Console.Write(m.melodicContourID + " ");
+                            }
+
+                            Console.WriteLine();
 
                             #endregion
 
