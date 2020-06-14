@@ -168,6 +168,7 @@ namespace MidiAnalyzer
                                             m.measureNum = measureNum;
                                             m.startTime = nextMeasureTime;
                                             m.timeSignature = timeSignature;
+                                            m.melodicContourID = 0;
 
                                             while (m.startTime >= nextKeySignatureTime && keySignatureIndex <= keySignatureList.Count - 3)
                                             {
@@ -339,7 +340,8 @@ namespace MidiAnalyzer
 
                                 #endregion
 
-                                melodicContourData.Add(new KeyValuePair<int, MelodicContour>(measure.measureNum, measure.melodicContour));
+                                if (measure.monophonicScore.Count > 0)
+                                    melodicContourData.Add(new KeyValuePair<int, MelodicContour>(measure.measureNum, measure.melodicContour));
 
                                 //Console.WriteLine("-------------");
                             }
@@ -406,7 +408,7 @@ namespace MidiAnalyzer
                             foreach (var point in result.Noise)
                             {
                                 // No cluster
-                                track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = 0;
+                                //track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = 0;
                                 Console.WriteLine("Measure " + point.Feature.Key);
                                 point.Feature.Value.Print();
                             }
