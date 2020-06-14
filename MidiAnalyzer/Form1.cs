@@ -32,6 +32,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NAudio.Midi;
+using DbscanImplementation;
 
 namespace MidiAnalyzer
 {
@@ -286,14 +287,15 @@ namespace MidiAnalyzer
                                 Console.WriteLine(note.ToString());
                             }
                             Console.WriteLine("------------------------------------------------");
-                            */
                             foreach (Measure measure in track.measures)
                             {
                                 Console.WriteLine(measure.ToString());
                             }
                             Console.WriteLine("------------------------------------------------");
+                            */
 
                             #endregion
+
 
                             foreach (Measure measure in track.measures)
                             {
@@ -319,10 +321,12 @@ namespace MidiAnalyzer
                                     else return e1.Position - e2.Position;
                                 });
 
+                                /*
                                 foreach (Note note in measure.monophonicScore)
                                 {
                                     Console.WriteLine(note.ToString());
                                 }
+                                */
 
                                 #endregion
 
@@ -330,12 +334,80 @@ namespace MidiAnalyzer
 
                                 measure.melodicContour = new MelodicContour(measure.monophonicScore,
                                     64 * measure.timeSignature.Key / measure.timeSignature.Value);
-                                measure.melodicContour.Print();
+                                //measure.melodicContour.Print();
 
                                 #endregion
 
-                                Console.WriteLine("-------------");
+
+                                //Console.WriteLine("-------------");
                             }
+
+                            List<KeyValuePair<int, MelodicContour>> melodicContourData = new List<KeyValuePair<int, MelodicContour>>();
+
+                            for (int i = 0; i <= track.measures.Count; i++)
+                            {
+                                MelodicContour mc;
+                                if (i == 0)
+                                {
+                                    mc = new MelodicContour(track.measures[i].monophonicScore,
+                                        64 * track.measures[i].timeSignature.Key / track.measures[i].timeSignature.Value);
+                                    mc.DelayNotes(mc.firstRestDuration + 64 * track.measures[i].timeSignature.Key / track.measures[i].timeSignature.Value);
+                                }
+                                else if (i == track.measures.Count)
+                                {
+                                    mc = new MelodicContour(track.measures[i - 1].monophonicScore,
+                                        64 * 2 * track.measures[i - 1].timeSignature.Key / track.measures[i - 1].timeSignature.Value);
+                                }
+                                else
+                                {
+                                    List<Note> twoMeasures = new List<Note>();
+                                    foreach (Note note in track.measures[i - 1].monophonicScore)
+                                    {
+                                        twoMeasures.Add(note);
+                                    }
+                                    foreach (Note note in track.measures[i].monophonicScore)
+                                    {
+                                        twoMeasures.Add(note);
+                                    }
+                                    mc = new MelodicContour(twoMeasures,
+                                        64 * 2 * track.measures[i].timeSignature.Key / track.measures[i].timeSignature.Value);
+                                }
+                                melodicContourData.Add(new KeyValuePair<int, MelodicContour>(i, mc));
+                            }
+
+
+                            #region DBSCAN clustering for melodic contour
+
+                            DbscanAlgorithm<KeyValuePair<int, MelodicContour>> dbscan =
+                                new DbscanAlgorithm<KeyValuePair<int, MelodicContour>>((e1, e2) => e1.Value.Distance(e2.Value));
+
+                            DbscanResult<KeyValuePair<int, MelodicContour>> result = dbscan.ComputeClusterDbscan(
+                                melodicContourData.ToArray(), 6, 2);
+
+                            track.dbscanResult = result;
+
+                            foreach (var p in result.Clusters)
+                            {
+                                Console.WriteLine("Cluster " + p.Key);
+                                foreach (var point in p.Value)
+                                {
+                                    //track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = p.Key;
+                                    Console.WriteLine("Measure " + point.Feature.Key + ": " + point.PointType);
+                                    point.Feature.Value.Print();
+                                }
+                                Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
+                            }
+
+                            Console.WriteLine("Noise");
+                            foreach (var point in result.Noise)
+                            {
+                                // No cluster
+                                //track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = 0;
+                                Console.WriteLine("Measure " + point.Feature.Key);
+                                point.Feature.Value.Print();
+                            }
+
+                            #endregion
 
                             tracks.Add(track);
                         }

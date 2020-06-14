@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+using DbscanImplementation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,5 +37,6 @@ namespace MidiAnalyzer
         public int measureCount;    // max(# of measure in all tracks with the same songName)
         public List<Measure> measures;
         public List<Note> score;
+        public DbscanResult<KeyValuePair<int, MelodicContour>> dbscanResult;
     }
 }
