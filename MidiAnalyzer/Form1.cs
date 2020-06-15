@@ -352,6 +352,8 @@ namespace MidiAnalyzer
                             }
 
                             /*
+                            #region Process MelodicContour with two-measure pairs
+
                             List<KeyValuePair<int, MelodicContour>> melodicContourData = new List<KeyValuePair<int, MelodicContour>>();
 
                             for (int i = 0; i <= track.measures.Count; i++)
@@ -384,6 +386,8 @@ namespace MidiAnalyzer
                                 }
                                 melodicContourData.Add(new KeyValuePair<int, MelodicContour>(i, mc));
                             }
+
+                            #endregion
                             */
 
 
@@ -424,48 +428,22 @@ namespace MidiAnalyzer
 
                             Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
 
-                            string melodicContourSequence = "";
+                            List<int> melodicContourSequence = new List<int>();
                             foreach (Measure m in track.measures)
                             {
                                 Console.Write(m.melodicContourID + " ");
-                                melodicContourSequence += (char)Math.Abs(m.melodicContourID);
+                                melodicContourSequence.Add(m.melodicContourID);
                             }
 
-                            Console.WriteLine();
-
-                            Console.WriteLine("Longest Repeated Melodic Contour ID Sequence");
-
-                            string lrs = LongestRepeatedSubstring(melodicContourSequence);
-                            track.longestRepeatedMelodicContourSequence = new List<int>();
-                            for (int i = 0; i < lrs.Length; i++)
-                            {
-                                if (lrs[i] > result.Clusters.Count)
-                                {
-                                    track.longestRepeatedMelodicContourSequence.Add(-1 * lrs[i]);
-                                    Console.Write(-1 * (int)lrs[i] + " ");
-                                }
-                                else
-                                {
-                                    track.longestRepeatedMelodicContourSequence.Add(lrs[i]);
-                                    Console.Write((int)lrs[i] + " ");
-                                }
-                            }
                             Console.WriteLine();
 
                             Console.WriteLine("Repeated Melodic Contour ID Sequences with 4 or more length");
-                            List<string> rs = RepeatedSubstrings(melodicContourSequence, 4);
-                            foreach (string s in rs)
+                            List<List<int>> rs = LongestRepeatedSubstrings(melodicContourSequence, 4);
+                            foreach (List<int> s in rs)
                             {
-                                for (int i = 0; i < s.Length; i++)
+                                for (int i = 0; i < s.Count; i++)
                                 {
-                                    if (lrs[i] > result.Clusters.Count)
-                                    {
-                                        Console.Write(-1 * (int)s[i] + " ");
-                                    }
-                                    else
-                                    {
-                                        Console.Write((int)s[i] + " ");
-                                    }
+                                    Console.Write(s[i] + " ");
                                 }
                                 Console.WriteLine();
                             }
@@ -521,81 +499,86 @@ namespace MidiAnalyzer
             return String.Format("{0}:{1}:{2}", bar, beat, tick);
         }
 
-        // https://www.programmingalgorithms.com/algorithm/longest-repeated-substring/
-        public static string LongestRepeatedSubstring(string str)
+        public List<List<int>> LongestRepeatedSubstrings(List<int> melodicContourIDSequence, int minLength = 4)
         {
-            if (string.IsNullOrEmpty(str))
-                return null;
-
-            int N = str.Length;
-            string[] substrings = new string[N];
-
-            for (int i = 0; i < N; i++)
+            List<List<int>> results = new List<List<int>>();
+            List<int> endIndices = new List<int>();
+            for (int i = 0; i <= melodicContourIDSequence.Count - (minLength * 2); i++)
             {
-                substrings[i] = str.Substring(i);
-            }
-
-            Array.Sort(substrings);
-
-            string result = "";
-
-            for (int i = 0; i < N - 1; i++)
-            {
-                string lcs = LongestCommonString(substrings[i], substrings[i + 1]);
-
-                if (lcs.Length > result.Length)
+                int maxLength = -1;
+                List<int> maxSequence = null;
+                for (int j = i + minLength; j <= melodicContourIDSequence.Count - minLength; j++)
                 {
-                    result = lcs;
+                    int length = minLength;
+                    bool b = true;
+                    bool findAtLeastOne = false;
+                    while (b)
+                    {
+                        if (j + length >= melodicContourIDSequence.Count || i + length >= j)
+                        {
+                            b = false;
+                            length--;
+                            break;
+                        }
+
+                        for (int k = 0; k < length; k++)
+                        {
+                            if (melodicContourIDSequence[i + k] != melodicContourIDSequence[j + k])
+                            {
+                                b = false;
+                                length--;
+                                break;
+                            }
+                        }
+                        if (b)
+                        {
+                            findAtLeastOne = true;
+                            length++;
+                        }
+                    }
+                    if (findAtLeastOne && length > maxLength)
+                    {
+                        maxSequence = melodicContourIDSequence.GetRange(i, length);
+                        maxLength = length;
+                    }
+                }
+
+                // Remove duplicates
+                if (maxLength >= minLength && !endIndices.Contains(i + maxLength - 1))
+                {
+                    bool isReplicated = false;
+                    foreach (List<int> l in results)
+                    {
+                        bool isEqual1 = true, isEqual2 = true;
+                        for (int j = 0; j < Math.Min(l.Count, maxLength); j++)
+                        {
+                            if (l[j] != maxSequence[j])
+                            {
+                                isEqual1 = false;
+                            }
+                            if (l[l.Count - 1 - j] != maxSequence[maxLength - 1 - j])
+                            {
+                                isEqual2 = false;
+                            }
+                            if (!isEqual1 && !isEqual2)
+                            {
+                                break;
+                            }
+                        }
+                        if (isEqual1 || isEqual2)
+                        {
+                            isReplicated = true;
+                            break;
+                        }
+                    }
+                    if (!isReplicated)
+                    {
+                        results.Add(maxSequence);
+                        endIndices.Add(i + maxLength - 1);
+                    }
                 }
             }
-
-            return result;
-        }
-
-        private static string LongestCommonString(string a, string b)
-        {
-            int n = Math.Min(a.Length, b.Length);
-            string result = "";
-
-            for (int i = 0; i < n; i++)
-            {
-                if (a[i] == b[i])
-                    result = result + a[i];
-                else
-                    break;
-            }
-
-            return result;
-        }
-
-        public static List<string> RepeatedSubstrings(string str, int minLength)
-        {
-            if (string.IsNullOrEmpty(str))
-                return null;
-
-            int N = str.Length;
-            string[] substrings = new string[N];
-
-            for (int i = 0; i < N; i++)
-            {
-                substrings[i] = str.Substring(i);
-            }
-
-            Array.Sort(substrings);
-
-            List<string> result = new List<string>();
-
-            for (int i = 0; i < N - 1; i++)
-            {
-                string lcs = LongestCommonString(substrings[i], substrings[i + 1]);
-
-                if (lcs.Length >= minLength)
-                {
-                    result.Add(lcs);
-                }
-            }
-
-            return result;
+            return results;
         }
     }
 }
