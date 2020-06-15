@@ -40,7 +40,7 @@ namespace MidiAnalyzer.Test
         {
             //ChordRecognitionTest();
             //MelodicContourEditTest();
-            //MelodicContourDistanceTest();
+            MelodicContourDistanceTest();
         }
 
         private void ChordRecognitionTest()
@@ -345,7 +345,7 @@ namespace MidiAnalyzer.Test
             mc.Print();
 
             Console.WriteLine("(12)");
-            // 직후 음표와 길이가 같고 클러스터가 다르도록 교체 (맨 앞 음표라서 클러스터 순위 변경 비용이 없음)
+            // 직후 음표와 길이가 같고 클러스터가 다르도록 교체 (앞에 위치한 음표라서 클러스터 순위 변경 비용이 없음)
             cost = mc.ReplaceNote(2, new MelodicContourNote(15, mc.GetExistingClusterNumber(1)));
             Console.WriteLine(cost);
             mc.Print();
@@ -359,7 +359,7 @@ namespace MidiAnalyzer.Test
 
             Console.WriteLine("(14)");
             // 음 높이 변화와 길이를 유지하면서 클러스터 번호를 바꾸지만 클러스터 순위를 바꾸지 않도록 교체
-            // (기존 클러스터는 사라짐)
+            // (기존 클러스터가 사라지면서 클러스터 개수 변경 비용 발생)
             cost = mc.ReplaceNote(4, 16, 1);
             Console.WriteLine(cost);
             mc.Print();
@@ -870,6 +870,52 @@ namespace MidiAnalyzer.Test
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
             Console.WriteLine("min: " + mc.Distance(mc2));
+            Console.WriteLine();
+
+            Console.WriteLine("(12)");
+            mc = new MelodicContour(0,
+                new MelodicContourNote(16, 61),
+                new MelodicContourNote(8, 62),
+                new MelodicContourNote(8, 64),
+                new MelodicContourNote(16, 66),
+                new MelodicContourNote(16, 69));
+            mc2 = new MelodicContour(0,
+                new MelodicContourNote(16, 76),
+                new MelodicContourNote(8, 73),
+                new MelodicContourNote(8, 73),
+                new MelodicContourNote(16, 73),
+                new MelodicContourNote(16, 76));
+            mc.Print();
+            Console.WriteLine();
+            mc2.Print();
+            Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
+            Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine();
+
+            Console.WriteLine("(13)");
+            mc = new MelodicContour(0,
+                new MelodicContourNote(8, 51),
+                new MelodicContourNote(8, 54),
+                new MelodicContourNote(8, 60),
+                new MelodicContourNote(8, 54),
+                new MelodicContourNote(8, 44),
+                new MelodicContourNote(8, 51),
+                new MelodicContourNote(8, 60),
+                new MelodicContourNote(8, 51));
+            mc2 = new MelodicContour(0,
+                new MelodicContourNote(8, 61),
+                new MelodicContourNote(8, 56),
+                new MelodicContourNote(8, 50),
+                new MelodicContourNote(8, 40),
+                new MelodicContourNote(8, 37),
+                new MelodicContourNote(8, 44),
+                new MelodicContourNote(8, 53),
+                new MelodicContourNote(8, 59));
+            mc.Print();
+            Console.WriteLine();
+            mc2.Print();
+            Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
+            Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
             Console.WriteLine();
         }
     }

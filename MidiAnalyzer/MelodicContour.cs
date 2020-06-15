@@ -37,7 +37,7 @@ namespace MidiAnalyzer
         /// <summary>
         /// Distance() 함수 호출 시 콘솔에 내부 계산 과정을 출력하려면 이 값을 true로 설정합니다.
         /// </summary>
-        private const bool DISTANCE_DEBUG = true;
+        private const bool DISTANCE_DEBUG = false;
 
         /// <summary>
         /// 음표 목록.
@@ -139,23 +139,28 @@ namespace MidiAnalyzer
         /// 편집 연산을 수행한 결과로 음표 또는 맨 앞 쉼표의 길이가 바뀌는 경우 발생하는 비용입니다.
         /// Delete, Insert, Replace, Delay에서만 발생할 수 있습니다.
         /// </summary>
-        public const int DURATION_COST = 3;
+        public const int DURATION_COST = 2;
 
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 시작 위치가 바뀌는 경우 발생하는 비용입니다.
         /// Move, DelayAndReplace에서만 발생할 수 있습니다.
         /// </summary>
-        public const int ONSET_COST = 2;
+        public const int ONSET_COST = 1;
 
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 음 높이 변화가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
-        public const int PITCH_VARIANCE_COST = 2;
+        public const int PITCH_VARIANCE_COST = 1;
 
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 순위가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
         public const int PITCH_CLUSTER_RANK_COST = 1;
+
+        /// <summary>
+        /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 개수가 바뀌는 경우 발생하는 비용입니다.
+        /// </summary>
+        public const int PITCH_CLUSTER_COUNT_COST = 1;
 
         /// <summary>
         /// 음표 목록에 있는 한 음표가 직전 음표보다 높은 음을 가지면 1,
@@ -261,8 +266,8 @@ namespace MidiAnalyzer
 
         /// <summary>
         /// 음표 목록에서 주어진 음표 노드보다 앞에 위치한 음표들만 고려하여
-        /// 이 음표 노드의 클러스터 위상 순위를 반환합니다.
-        /// 가장 작은 음 높이 클러스터 번호의 위상 순위는 0입니다.
+        /// 이 음표 노드의 클러스터 순위를 반환합니다.
+        /// 가장 작은 음 높이 클러스터 번호의 순위는 0입니다.
         /// 잘못된 음표 노드가 들어온 경우 -1을 반환합니다.
         /// </summary>
         /// <returns></returns>
@@ -284,14 +289,34 @@ namespace MidiAnalyzer
         }
 
         /// <summary>
-        /// 주어진 클러스터 위상 순위에 삽입할, 적절한 새 클러스터 번호를 반환합니다.
+        /// 음표 목록에서 주어진 음표 노드보다 앞에 위치한 음표들만 고려하여
+        /// 멜로디 형태의 클러스터 개수를 반환합니다.
+        /// 잘못된 음표 노드가 들어온 경우 0을 반환합니다.
+        /// </summary>
+        /// <returns></returns>
+        public int GetClusterCount(LinkedListNode<MelodicContourNote> noteNode)
+        {
+            if (noteNode == null) return 0;
+
+            List<float> pcList = new List<float>();
+            LinkedListNode<MelodicContourNote> node = noteNode;
+            while (node != null)
+            {
+                pcList.Add(node.Value.PitchCluster);
+                node = node.Previous;
+            }
+            return pcList.Distinct().Count();
+        }
+
+        /// <summary>
+        /// 주어진 클러스터 순위에 삽입할, 적절한 새 클러스터 번호를 반환합니다.
         /// 삽입 후에 이 인덱스 이후의 기존 클러스터들은 위상이 한 칸씩 뒤로 밀려납니다.
         /// 클러스터 번호가 작을수록 낮은 음입니다.
         /// (주의: 이 메서드는 새 클러스터를 삽입해주지 않습니다.
         /// 새 클러스터를 삽입하려면 InsertNote() 또는 ReplaceNote() 또는 MoveNotes()를 호출하고,
         /// 여기에 인자로 넣을 새 음표에 대해 이 메서드를 호출하십시오.)
         /// </summary>
-        /// <param name="clusterRankToInsert">새 클러스터를 삽입할 클러스터 위상 순위</param>
+        /// <param name="clusterRankToInsert">새 클러스터를 삽입할 클러스터 순위</param>
         /// <returns></returns>
         public float GetNewClusterNumber(int clusterRankToInsert)
         {
@@ -319,7 +344,7 @@ namespace MidiAnalyzer
         }
 
         /// <summary>
-        /// 주어진 클러스터 위상 순위를 가진 기존 클러스터 번호를 반환합니다.
+        /// 주어진 클러스터 순위를 가진 기존 클러스터 번호를 반환합니다.
         /// 이 클러스터에 새 음표를 삽입해도
         /// 다른 클러스터들의 위상에는 영향을 주지 않습니다.
         /// 클러스터 번호가 작을수록 낮은 음입니다.
@@ -327,7 +352,7 @@ namespace MidiAnalyzer
         /// 새 클러스터를 삽입하려면 InsertNote() 또는 ReplaceNote() 또는 MoveNotes()를 호출하고,
         /// 여기에 인자로 넣을 새 음표에 대해 이 메서드를 호출하십시오.)
         /// </summary>
-        /// <param name="clusterRank">클러스터 위상 순위 (0 이상, 서로 다른 클러스터 개수 미만)</param>
+        /// <param name="clusterRank">클러스터 순위 (0 이상, 서로 다른 클러스터 개수 미만)</param>
         /// <returns></returns>
         public float GetExistingClusterNumber(int clusterRank)
         {
@@ -348,7 +373,7 @@ namespace MidiAnalyzer
             }
             else
             {
-                // 주어진 클러스터 위상 순위를 갖는 클러스터 번호
+                // 주어진 클러스터 순위를 갖는 클러스터 번호
                 return metadataList[clusterRank].pitchCluster;
             }
         }
@@ -385,6 +410,8 @@ namespace MidiAnalyzer
             }
 
             // 메타데이터 편집
+            int oldMetadataListCount = GetClusterCount(node.Previous);
+
             MelodicContourMetadata m = metadataList.Find(e => e.pitchCluster == note.PitchCluster);
             if (m != null)
             {
@@ -397,6 +424,13 @@ namespace MidiAnalyzer
                 m = new MelodicContourMetadata(note.PitchCluster, node);
                 metadataList.Add(m);
                 metadataList.Sort();
+            }
+
+            int gamma = 0;
+            if (GetClusterCount(node) != oldMetadataListCount)
+            {
+                // (음 높이 클러스터 개수 변경 비용)
+                gamma = PITCH_CLUSTER_COUNT_COST;
             }
 
             if (node.Next != null)
@@ -416,8 +450,8 @@ namespace MidiAnalyzer
             else
             {
                 // 삽입된 음표의 음 높이 변화가 0이 아니므로 비용 추가
-                // (음표 추가로 인한 길이 변경 비용 + 삽입된 음표의 음 높이 변화 변경 비용 + 삽입된 음표의 클러스터 위상 변경 비용)
-                return DURATION_COST + PITCH_VARIANCE_COST + PITCH_CLUSTER_RANK_COST;
+                // (음표 추가로 인한 길이 변경 비용 + 삽입된 음표의 음 높이 변화 변경 비용 + 삽입된 음표의 클러스터 순위 변경 비용 + gamma)
+                return DURATION_COST + PITCH_VARIANCE_COST + PITCH_CLUSTER_RANK_COST + gamma;
             }
         }
 
@@ -455,6 +489,8 @@ namespace MidiAnalyzer
             MelodicContourNote note = node.Value;
 
             // 메타데이터 편집
+            int oldMetadataListCount = GetClusterCount(node);
+
             MelodicContourMetadata m = metadataList.Find(e => e.pitchCluster == note.PitchCluster);
             if (m != null)
             {
@@ -475,12 +511,19 @@ namespace MidiAnalyzer
                 return INVALID_COST;
             }
 
+            int gamma = 0;
+            if (GetClusterCount(node.Previous) != oldMetadataListCount)
+            {
+                // (음 높이 클러스터 개수 변경 비용)
+                gamma = PITCH_CLUSTER_COUNT_COST;
+            }
+
             int pv = PitchVariance(node);
             int alpha = 0;
             if (pv == -1 || pv == 1)
             {
                 // 제거할 음표의 음 높이 변화가 0이 아니므로 비용 추가
-                // (제거할 음표의 음 높이 변화 변경 비용 + 제거할 음표의 클러스터 위상 변경 비용)
+                // (제거할 음표의 음 높이 변화 변경 비용 + 제거할 음표의 클러스터 순위 변경 비용)
                 alpha = PITCH_VARIANCE_COST + PITCH_CLUSTER_RANK_COST; ;
             }
 
@@ -495,8 +538,8 @@ namespace MidiAnalyzer
                 PitchVariance(next);
             }
 
-            // (음표 제거로 인한 길이 변경 비용 + alpha)
-            return DURATION_COST + alpha;
+            // (음표 제거로 인한 길이 변경 비용 + alpha + gamma)
+            return DURATION_COST + alpha + gamma;
         }
 
         /// <summary>
@@ -529,6 +572,8 @@ namespace MidiAnalyzer
 
             // 메타데이터 편집
             // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
+            int oldMetadataListCount = GetClusterCount(node);
+
             if (oldNote.PitchCluster != newNote.PitchCluster)
             {
                 // 기존 음표에 대한 메타데이터 수정
@@ -578,7 +623,7 @@ namespace MidiAnalyzer
             //Console.WriteLine("ClusterRank: " + oldClusterIndex + " -> " + newClusterIndex);
             if (oldClusterIndex != newClusterIndex)
             {
-                // (교체한 음표의 클러스터 위상 변경 비용)
+                // (교체한 음표의 클러스터 순위 변경 비용)
                 alpha += PITCH_CLUSTER_RANK_COST;
             }
 
@@ -607,7 +652,14 @@ namespace MidiAnalyzer
                 }
             }
 
-            return beta + alpha;
+            int gamma = 0;
+            if (GetClusterCount(node) != oldMetadataListCount)
+            {
+                // (음 높이 클러스터 개수 변경 비용)
+                gamma = PITCH_CLUSTER_COUNT_COST;
+            }
+
+            return beta + alpha + gamma;
         }
 
         /// <summary>
@@ -732,6 +784,8 @@ namespace MidiAnalyzer
 
             // 메타데이터 편집
             // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
+            int oldMetadataListCount = GetClusterCount(node2);
+
             if (oldSecondNote.PitchCluster != newSecondNote.PitchCluster)
             {
                 if (m2 != null)
@@ -803,12 +857,12 @@ namespace MidiAnalyzer
             int newClusterIndex2 = GetClusterRank(node2);
             if (oldClusterIndex1 != newClusterIndex1)
             {
-                // (교체한 음표의 클러스터 위상 변경 비용)
+                // (교체한 음표의 클러스터 순위 변경 비용)
                 alpha += PITCH_CLUSTER_RANK_COST;
             }
             if (oldClusterIndex2 != newClusterIndex2)
             {
-                // (교체한 음표의 클러스터 위상 변경 비용)
+                // (교체한 음표의 클러스터 순위 변경 비용)
                 alpha += PITCH_CLUSTER_RANK_COST;
             }
 
@@ -854,7 +908,14 @@ namespace MidiAnalyzer
                 }
             }
 
-            return beta + alpha;
+            int gamma = 0;
+            if (GetClusterCount(node2) != oldMetadataListCount)
+            {
+                // (음 높이 클러스터 개수 변경 비용)
+                gamma = PITCH_CLUSTER_COUNT_COST;
+            }
+
+            return beta + alpha + gamma;
         }
 
         /// <summary>
@@ -905,6 +966,8 @@ namespace MidiAnalyzer
 
             // 메타데이터 편집
             // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
+            int oldMetadataListCount = GetClusterCount(node1);
+
             if (oldFirstNote.PitchCluster != newFirstNote.PitchCluster)
             {
                 MelodicContourMetadata m1 = metadataList.Find(e => e.pitchCluster == oldFirstNote.PitchCluster);
@@ -971,7 +1034,14 @@ namespace MidiAnalyzer
                 }
             }
 
-            return beta;
+            int gamma = 0;
+            if (GetClusterCount(node1) != oldMetadataListCount)
+            {
+                // (음 높이 클러스터 개수 변경 비용)
+                gamma = PITCH_CLUSTER_COUNT_COST;
+            }
+
+            return beta + gamma;
         }
 
         /// <summary>
@@ -2323,10 +2393,13 @@ namespace MidiAnalyzer
         /// </summary>
         public int absolutePitch;
 
-        public MelodicContourMetadata(float pitchCluster, params LinkedListNode<MelodicContourNote>[] noteNodes)
+        public MelodicContourMetadata(float pitchCluster, LinkedListNode<MelodicContourNote> noteNodes)
         {
             this.pitchCluster = pitchCluster;
-            this.noteNodes = noteNodes.ToList();
+            this.noteNodes = new List<LinkedListNode<MelodicContourNote>>()
+            {
+                noteNodes
+            };
             absolutePitch = -1;
         }
 
