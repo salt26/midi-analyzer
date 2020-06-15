@@ -39,8 +39,8 @@ namespace MidiAnalyzer.Test
         public SFXTest()
         {
             //ChordRecognitionTest();
-            MelodicContourEditTest();
-            //MelodicContourDistanceTest();
+            //MelodicContourEditTest();
+            MelodicContourDistanceTest();
         }
 
         private void ChordRecognitionTest()
@@ -665,6 +665,7 @@ namespace MidiAnalyzer.Test
             mc2.Print();
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine();
 
             Console.WriteLine("(2)");
             mc2 = mc.Copy();
@@ -680,6 +681,7 @@ namespace MidiAnalyzer.Test
             mc2.Print();
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine();
 
             Console.WriteLine("(3)");
             MelodicContour mc3 = mc2.Copy();
@@ -698,6 +700,7 @@ namespace MidiAnalyzer.Test
             mc2.Print();
             Console.WriteLine("distance: " + mc3.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc3));
+            Console.WriteLine();
 
             Console.WriteLine("(4)");
             mc2 = mc.Copy();
@@ -715,6 +718,7 @@ namespace MidiAnalyzer.Test
             mc2.Print();
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine();
 
             Console.WriteLine("(5)");
             mc = new MelodicContour(0,
@@ -744,6 +748,7 @@ namespace MidiAnalyzer.Test
             Console.WriteLine();
             mc.Print();
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine();
 
             Console.WriteLine("(6)");
             mc2 = new MelodicContour(0,
@@ -762,6 +767,7 @@ namespace MidiAnalyzer.Test
             mc2.Print();
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine();
 
             Console.WriteLine("(7)");
             mc2 = new MelodicContour(0,
@@ -782,6 +788,7 @@ namespace MidiAnalyzer.Test
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
             Console.WriteLine("min: " + mc.Distance(mc2));
+            Console.WriteLine();
 
             // In this example, `mc.DistanceWithDirection(mc2)` is differ from `mc2.DistanceWithDirection(mc)`.
             Console.WriteLine("(8)");
@@ -809,6 +816,7 @@ namespace MidiAnalyzer.Test
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
             Console.WriteLine("min: " + mc.Distance(mc2));
+            Console.WriteLine();
 
             Console.WriteLine("(9)");
             mc = new MelodicContour(0,
@@ -824,6 +832,27 @@ namespace MidiAnalyzer.Test
             Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
             Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
             Console.WriteLine("min: " + mc.Distance(mc2));
+            Console.WriteLine();
+
+            // In this example, the optimal path must use two MoveNotes() operations.
+            Console.WriteLine("(10)");
+            mc = new MelodicContour(0,
+                new MelodicContourNote(8, 0),
+                new MelodicContourNote(8, 0),
+                new MelodicContourNote(8, 0),
+                new MelodicContourNote(8, 0));
+            mc2 = new MelodicContour(0,
+                new MelodicContourNote(12, 0),
+                new MelodicContourNote(4, 1),
+                new MelodicContourNote(4, 0),
+                new MelodicContourNote(12, -1));
+            mc.Print();
+            Console.WriteLine();
+            mc2.Print();
+            Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
+            Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine("min: " + mc.Distance(mc2));
+            Console.WriteLine();
         }
     }
 

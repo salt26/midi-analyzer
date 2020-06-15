@@ -37,7 +37,7 @@ namespace MidiAnalyzer
         /// <summary>
         /// Distance() 함수 호출 시 콘솔에 내부 계산 과정을 출력하려면 이 값을 true로 설정합니다.
         /// </summary>
-        private const bool DISTANCE_DEBUG = false;
+        private const bool DISTANCE_DEBUG = true;
 
         /// <summary>
         /// 음표 목록.
@@ -137,8 +137,15 @@ namespace MidiAnalyzer
 
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표 또는 맨 앞 쉼표의 길이가 바뀌는 경우 발생하는 비용입니다.
+        /// Delete, Insert, Replace, Delay에서만 발생할 수 있습니다.
         /// </summary>
         public const int DURATION_COST = 3;
+
+        /// <summary>
+        /// 편집 연산을 수행한 결과로 음표의 시작 위치가 바뀌는 경우 발생하는 비용입니다.
+        /// Move, DelayAndReplace에서만 발생할 수 있습니다.
+        /// </summary>
+        public const int ONSET_COST = 2;
 
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 음 높이 변화가 바뀌는 경우 발생하는 비용입니다.
@@ -769,8 +776,8 @@ namespace MidiAnalyzer
                 }
             }
 
-            // (앞 또는 뒤 음표 길이 변경 비용)
-            int beta = DURATION_COST;
+            // (뒤 음표 시작 위치 변경 비용)
+            int beta = ONSET_COST;
 
             // 새 음표로 교체
             node1.Value = newFirstNote;
@@ -925,8 +932,8 @@ namespace MidiAnalyzer
                 }
             }
 
-            // (쉼표 및 음표 길이 변경 비용)
-            int beta = DURATION_COST;
+            // (음표 시작 위치 변경 비용)
+            int beta = ONSET_COST;
 
             // 새 음표로 교체
             node1.Value = newFirstNote;
@@ -1128,12 +1135,13 @@ namespace MidiAnalyzer
         {
             // Dynamic Programming (time complexity: O(n^2))
             // Note: This method finds the local optimum, not the global optimum.
-            // To find the global optimum, backtracking technique should be used. (time complexity: O(3^n))
+            // To find the global optimum, backtracking technique should be used. (time complexity: O(4^n))
 
             int lenThis = this.noteList.Count;
             int lenOther = other.noteList.Count;
             MelodicContour mc;
             LinkedListNode<MelodicContourNote> nodeB;
+            LinkedListNode<MelodicContourNote> nodeB2;
             List<List<DistanceTable>> distanceTable =
                 new List<List<DistanceTable>>(lenThis + 1);
 
@@ -1254,6 +1262,40 @@ namespace MidiAnalyzer
                                 tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(k + 1, OperationInfo.Type.Replace));
                                 costs.Add(new DistanceTable(
                                     distanceTable[i - 1][j - 1].Distance + tempMC.ReplaceNote(tempMC.noteList.Count - 1, nodeB.Value.Copy()),
+                                    tempPath));
+                            }
+                        }
+                    }
+                    #endregion
+
+                    #region Move 연산
+                    if (i > 1 && j > 1)
+                    {
+                        foreach (List<KeyValuePair<int, OperationInfo.Type>> path in distanceTable[i - 2][j - 2].Paths)
+                        {
+                            List<OperationInfo> operations = PathToOperations(path, Copy(this, i - 1), Copy(other, j - 1));
+                            mc = Copy(this, i - 1);
+                            nodeB = other.GetNoteNodeByIndex(j - 2);
+                            nodeB2 = other.GetNoteNodeByIndex(j - 1);
+
+                            MelodicContour tempMC = mc.Copy();
+                            List<KeyValuePair<int, OperationInfo.Type>> tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
+                            tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(0, OperationInfo.Type.Move));
+                            costs.Add(new DistanceTable(
+                                distanceTable[i - 2][j - 2].Distance + tempMC.MoveNotes(tempMC.noteList.Count - 2, nodeB.Value.Copy(), nodeB2.Value.Copy()),
+                                tempPath));
+
+                            for (int k = 0; k < operations.Count; k++)
+                            {
+                                if (mc.PerformOperation(operations[k]) == INVALID_COST)
+                                {
+                                    break;
+                                }
+                                tempMC = mc.Copy();
+                                tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
+                                tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(k + 1, OperationInfo.Type.Move));
+                                costs.Add(new DistanceTable(
+                                    distanceTable[i - 2][j - 2].Distance + tempMC.MoveNotes(tempMC.noteList.Count - 2, nodeB.Value.Copy(), nodeB2.Value.Copy()),
                                     tempPath));
                             }
                         }
@@ -1389,8 +1431,8 @@ namespace MidiAnalyzer
             List<OperationInfo> operations = new List<OperationInfo>();
             List<KeyValuePair<int, int>> noteIndices = new List<KeyValuePair<int, int>>();
             int i = 0, j = 0;
-            LinkedListNode<MelodicContourNote> nodeA, nodeB;
-            MelodicContourNote noteA, noteB;
+            LinkedListNode<MelodicContourNote> nodeA, nodeB, nodeA2, nodeB2;
+            MelodicContourNote noteA, noteB, noteA2 = new MelodicContourNote(), noteB2 = new MelodicContourNote();
             for (int k = 0; k < path.Count; k++)
             {
                 OperationInfo.Type op = path[k].Value;
@@ -1411,6 +1453,20 @@ namespace MidiAnalyzer
                 else
                 {
                     noteB = new MelodicContourNote();
+                }
+                if (op == OperationInfo.Type.Move)
+                {
+                    nodeA2 = melodicContourA.GetNoteNodeByIndex(i + 1); // TODO i - 1?
+                    nodeB2 = melodicContourB.GetNoteNodeByIndex(j + 1); // TODO i - 1?
+
+                    if (nodeA2 != null)
+                    {
+                        noteA2 = nodeA2.Value.Copy();
+                    }
+                    if (nodeB2 != null)
+                    {
+                        noteB2 = nodeB2.Value.Copy();
+                    }
                 }
 
                 OperationInfo info = new OperationInfo(op, -1, noteA, noteB);
@@ -1436,6 +1492,12 @@ namespace MidiAnalyzer
                         operations.Insert(path[k].Key, new OperationInfo(
                             melodicContourA.firstRestDuration, melodicContourB.firstRestDuration));
                         noteIndices.Insert(path[k].Key, new KeyValuePair<int, int>(-1, -1));
+                        break;
+                    case OperationInfo.Type.Move:
+                        operations.Insert(path[k].Key, new OperationInfo(-1, noteA, noteA2, noteB, noteB2));
+                        noteIndices.Insert(path[k].Key, new KeyValuePair<int, int>(i, j));
+                        i += 2;
+                        j += 2;
                         break;
                 }
             }
@@ -1486,6 +1548,10 @@ namespace MidiAnalyzer
                     case OperationInfo.Type.Delay:
                         operations[k].noteIndex = -1;
                         break;
+                    case OperationInfo.Type.Move:
+                        index = AdjustIndex(indexAdjuster, noteIndices[k].Key, operations[k].type);
+                        operations[k].noteIndex = index;
+                        break;
                 }
             }
             
@@ -1510,8 +1576,8 @@ namespace MidiAnalyzer
             List<OperationInfo> operations = new List<OperationInfo>();
             List<KeyValuePair<int, int>> noteIndices = new List<KeyValuePair<int, int>>();
             int i = 0, j = 0;
-            LinkedListNode<MelodicContourNote> nodeA, nodeB;
-            MelodicContourNote noteA, noteB;
+            LinkedListNode<MelodicContourNote> nodeA, nodeB, nodeA2, nodeB2;
+            MelodicContourNote noteA, noteB, noteA2 = new MelodicContourNote(), noteB2 = new MelodicContourNote();
             bool hasDelay = false;
             for (int k = 0; k < path.Count; k++)
             {
@@ -1533,6 +1599,20 @@ namespace MidiAnalyzer
                 else
                 {
                     noteB = new MelodicContourNote();
+                }
+                if (op == OperationInfo.Type.Move)
+                {
+                    nodeA2 = melodicContourA.GetNoteNodeByIndex(i + 1); // TODO i - 1?
+                    nodeB2 = melodicContourB.GetNoteNodeByIndex(j + 1); // TODO i - 1?
+
+                    if (nodeA2 != null)
+                    {
+                        noteA2 = nodeA2.Value.Copy();
+                    }
+                    if (nodeB2 != null)
+                    {
+                        noteB2 = nodeB2.Value.Copy();
+                    }
                 }
 
                 OperationInfo info = new OperationInfo(op, -1, noteA, noteB);
@@ -1564,6 +1644,13 @@ namespace MidiAnalyzer
                             melodicContourA.firstRestDuration, melodicContourB.firstRestDuration));
                         hasDelay = true;
                         break;
+                    case OperationInfo.Type.Move:
+                        noteIndices.Insert(path[k].Key, new KeyValuePair<int, int>(i, j));
+                        i += 2;
+                        j += 2;
+                        operations.Insert(path[k].Key, new OperationInfo(-1, noteA, noteA2, noteB, noteB2,
+                            distanceTable[i][j].Distance - distanceTable[i - 2][j - 2].Distance));
+                        break;
                 }
             }
 
@@ -1612,6 +1699,10 @@ namespace MidiAnalyzer
                         break;
                     case OperationInfo.Type.Delay:
                         operations[k].noteIndex = -1;
+                        break;
+                    case OperationInfo.Type.Move:
+                        index = AdjustIndex(indexAdjuster, noteIndices[k].Key, operations[k].type);
+                        operations[k].noteIndex = index;
                         break;
                 }
             }
