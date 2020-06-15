@@ -1144,6 +1144,7 @@ namespace MidiAnalyzer
             LinkedListNode<MelodicContourNote> nodeB2;
             List<List<DistanceTable>> distanceTable =
                 new List<List<DistanceTable>>(lenThis + 1);
+            int delayCost = 0;
 
             for (int i = 0; i <= lenThis; i++)
             {
@@ -1302,6 +1303,39 @@ namespace MidiAnalyzer
                     }
                     #endregion
 
+                    #region DelayAndReplace 연산
+                    if (i == 1 && j == 1)
+                    {
+                        foreach (List<KeyValuePair<int, OperationInfo.Type>> path in distanceTable[i - 1][j - 1].Paths)
+                        {
+                            List<OperationInfo> operations = PathToOperations(path, Copy(this, i - 1), Copy(other, j - 1));
+                            mc = Copy(this, i - 1);
+                            nodeB = other.GetNoteNodeByIndex(j - 1);
+
+                            MelodicContour tempMC = mc.Copy();
+                            List<KeyValuePair<int, OperationInfo.Type>> tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
+                            tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(0, OperationInfo.Type.DelayAndReplace));
+                            costs.Add(new DistanceTable(
+                                distanceTable[i - 1][j - 1].Distance + tempMC.DelayAndReplaceNotes(other.firstRestDuration, nodeB.Value.Copy()),
+                                tempPath));
+
+                            for (int k = 0; k < operations.Count; k++)
+                            {
+                                if (mc.PerformOperation(operations[k]) == INVALID_COST)
+                                {
+                                    break;
+                                }
+                                tempMC = mc.Copy();
+                                tempPath = new List<KeyValuePair<int, OperationInfo.Type>>(path);
+                                tempPath.Add(new KeyValuePair<int, OperationInfo.Type>(k + 1, OperationInfo.Type.DelayAndReplace));
+                                costs.Add(new DistanceTable(
+                                    distanceTable[i - 1][j - 1].Distance + tempMC.DelayAndReplaceNotes(other.firstRestDuration, nodeB.Value.Copy()),
+                                    tempPath));
+                            }
+                        }
+                    }
+                    #endregion
+
                     #region 현재 단계의 연산 결과(d_i,j) 기록
 
                     distanceTable[i][j] = new DistanceTable(INVALID_COST);
@@ -1357,7 +1391,10 @@ namespace MidiAnalyzer
             #region Delay 연산
 
             mc = this.Copy();
-            int delayCost = mc.DelayNotes(other.firstRestDuration);
+
+            // 최적 경로에서 DelayAndReplace 연산을 사용하지 않은 경우 Delay 연산 적용 가능
+            if (distanceTable[lenThis][lenOther].Paths[0].FindIndex(e => e.Value == OperationInfo.Type.DelayAndReplace) == -1)    
+                delayCost = mc.DelayNotes(other.firstRestDuration);
 
             #endregion
 
@@ -1456,8 +1493,8 @@ namespace MidiAnalyzer
                 }
                 if (op == OperationInfo.Type.Move)
                 {
-                    nodeA2 = melodicContourA.GetNoteNodeByIndex(i + 1); // TODO i - 1?
-                    nodeB2 = melodicContourB.GetNoteNodeByIndex(j + 1); // TODO i - 1?
+                    nodeA2 = melodicContourA.GetNoteNodeByIndex(i + 1);
+                    nodeB2 = melodicContourB.GetNoteNodeByIndex(j + 1);
 
                     if (nodeA2 != null)
                     {
@@ -1498,6 +1535,13 @@ namespace MidiAnalyzer
                         noteIndices.Insert(path[k].Key, new KeyValuePair<int, int>(i, j));
                         i += 2;
                         j += 2;
+                        break;
+                    case OperationInfo.Type.DelayAndReplace:
+                        operations.Insert(path[k].Key, new OperationInfo(
+                            melodicContourA.firstRestDuration, melodicContourB.firstRestDuration, noteA, noteB));
+                        noteIndices.Insert(path[k].Key, new KeyValuePair<int, int>(i, j));
+                        i++;
+                        j++;
                         break;
                 }
             }
@@ -1549,6 +1593,10 @@ namespace MidiAnalyzer
                         operations[k].noteIndex = -1;
                         break;
                     case OperationInfo.Type.Move:
+                        index = AdjustIndex(indexAdjuster, noteIndices[k].Key, operations[k].type);
+                        operations[k].noteIndex = index;
+                        break;
+                    case OperationInfo.Type.DelayAndReplace:
                         index = AdjustIndex(indexAdjuster, noteIndices[k].Key, operations[k].type);
                         operations[k].noteIndex = index;
                         break;
@@ -1651,6 +1699,15 @@ namespace MidiAnalyzer
                         operations.Insert(path[k].Key, new OperationInfo(-1, noteA, noteA2, noteB, noteB2,
                             distanceTable[i][j].Distance - distanceTable[i - 2][j - 2].Distance));
                         break;
+                    case OperationInfo.Type.DelayAndReplace:
+                        noteIndices.Insert(path[k].Key, new KeyValuePair<int, int>(i, j));
+                        i++;
+                        j++;
+                        operations.Insert(path[k].Key, new OperationInfo(
+                            melodicContourA.firstRestDuration, melodicContourB.firstRestDuration, noteA, noteB,
+                            distanceTable[i][j].Distance - distanceTable[i - 1][j - 1].Distance));
+                        hasDelay = true;
+                        break;
                 }
             }
 
@@ -1701,6 +1758,10 @@ namespace MidiAnalyzer
                         operations[k].noteIndex = -1;
                         break;
                     case OperationInfo.Type.Move:
+                        index = AdjustIndex(indexAdjuster, noteIndices[k].Key, operations[k].type);
+                        operations[k].noteIndex = index;
+                        break;
+                    case OperationInfo.Type.DelayAndReplace:
                         index = AdjustIndex(indexAdjuster, noteIndices[k].Key, operations[k].type);
                         operations[k].noteIndex = index;
                         break;

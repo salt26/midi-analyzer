@@ -40,7 +40,7 @@ namespace MidiAnalyzer.Test
         {
             //ChordRecognitionTest();
             //MelodicContourEditTest();
-            MelodicContourDistanceTest();
+            //MelodicContourDistanceTest();
         }
 
         private void ChordRecognitionTest()
@@ -845,6 +845,24 @@ namespace MidiAnalyzer.Test
                 new MelodicContourNote(12, 0),
                 new MelodicContourNote(4, 1),
                 new MelodicContourNote(4, 0),
+                new MelodicContourNote(12, -1));
+            mc.Print();
+            Console.WriteLine();
+            mc2.Print();
+            Console.WriteLine("distance: " + mc.DistanceWithDirection(mc2));
+            Console.WriteLine("inverse distance: " + mc2.DistanceWithDirection(mc));
+            Console.WriteLine("min: " + mc.Distance(mc2));
+            Console.WriteLine();
+
+            // In this example, the optimal path must use a DelayAndReplaceNotes() operation.
+            Console.WriteLine("(11)");
+            mc = new MelodicContour(8,
+                new MelodicContourNote(8, 0),
+                new MelodicContourNote(8, 0),
+                new MelodicContourNote(8, 0));
+            mc2 = new MelodicContour(0,
+                new MelodicContourNote(16, 0),
+                new MelodicContourNote(4, -1),
                 new MelodicContourNote(12, -1));
             mc.Print();
             Console.WriteLine();
