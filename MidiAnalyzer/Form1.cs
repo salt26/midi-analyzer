@@ -40,6 +40,10 @@ namespace MidiAnalyzer
     {
         private const bool RESOLUTION_64 = true;    // 길이의 최소 단위를 false이면 32분음표로, true이면 64분음표로 사용
 
+        private const int DBSCAN_EPSILON = 5;
+
+        private const int DBSCAN_MINIMUM_POINTS = 2;
+
         public List<TrackInfo> tracks = new List<TrackInfo>();
 
         public Form1()
@@ -389,7 +393,7 @@ namespace MidiAnalyzer
                                 new DbscanAlgorithm<KeyValuePair<int, MelodicContour>>((e1, e2) => e1.Value.Distance(e2.Value));
 
                             DbscanResult<KeyValuePair<int, MelodicContour>> result = dbscan.ComputeClusterDbscan(
-                                melodicContourData.ToArray(), 2, 2);                                                // DBSCAN parameter setting
+                                melodicContourData.ToArray(), DBSCAN_EPSILON, DBSCAN_MINIMUM_POINTS);               // DBSCAN parameter setting
 
                             track.dbscanResult = result;
 
