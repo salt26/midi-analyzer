@@ -45,6 +45,7 @@ namespace MidiAnalyzer
         public Form1()
         {
             InitializeComponent();
+            new Test.SFXTest();
         }
 
         private void Form1_Load(object sender, EventArgs eventArgs)

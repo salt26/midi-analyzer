@@ -136,7 +136,7 @@ namespace MidiAnalyzer
         public const int INVALID_COST = int.MaxValue / 2;
 
         /// <summary>
-        /// 편집 연산을 수행한 결과로 음표의 길이가 바뀌는 경우 발생하는 비용입니다.
+        /// 편집 연산을 수행한 결과로 음표 또는 맨 앞 쉼표의 길이가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
         public const int DURATION_COST = 3;
 
@@ -149,11 +149,6 @@ namespace MidiAnalyzer
         /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 순위가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
         public const int PITCH_CLUSTER_RANK_COST = 1;
-
-        /// <summary>
-        /// 편집 연산(Delay)을 수행한 결과로 맨 앞 쉼표의 길이가 바뀌는 경우 발생하는 비용입니다.
-        /// </summary>
-        public const int FIRST_REST_DURATION_COST = 3;
 
         /// <summary>
         /// 음표 목록에 있는 한 음표가 직전 음표보다 높은 음을 가지면 1,
@@ -286,7 +281,7 @@ namespace MidiAnalyzer
         /// 삽입 후에 이 인덱스 이후의 기존 클러스터들은 위상이 한 칸씩 뒤로 밀려납니다.
         /// 클러스터 번호가 작을수록 낮은 음입니다.
         /// (주의: 이 메서드는 새 클러스터를 삽입해주지 않습니다.
-        /// 새 클러스터를 삽입하려면 InsertNote() 또는 MoveNote()를 호출하고,
+        /// 새 클러스터를 삽입하려면 InsertNote() 또는 ReplaceNote() 또는 MoveNotes()를 호출하고,
         /// 여기에 인자로 넣을 새 음표에 대해 이 메서드를 호출하십시오.)
         /// </summary>
         /// <param name="clusterRankToInsert">새 클러스터를 삽입할 클러스터 위상 순위</param>
@@ -322,7 +317,7 @@ namespace MidiAnalyzer
         /// 다른 클러스터들의 위상에는 영향을 주지 않습니다.
         /// 클러스터 번호가 작을수록 낮은 음입니다.
         /// (주의: 이 메서드는 새 클러스터를 삽입해주지 않습니다.
-        /// 새 클러스터를 삽입하려면 InsertNote() 또는 MoveNote()를 호출하고,
+        /// 새 클러스터를 삽입하려면 InsertNote() 또는 ReplaceNote() 또는 MoveNotes()를 호출하고,
         /// 여기에 인자로 넣을 새 음표에 대해 이 메서드를 호출하십시오.)
         /// </summary>
         /// <param name="clusterRank">클러스터 위상 순위 (0 이상, 서로 다른 클러스터 개수 미만)</param>
@@ -499,7 +494,7 @@ namespace MidiAnalyzer
 
         /// <summary>
         /// 멜로디 형태에 있던 음표 하나의 인덱스(음표 목록에서의 상대적 위치)를 유지하면서
-        /// Duration과 클러스터를 교체하는 연산을 수행합니다.
+        /// 길이와 클러스터를 교체하는 연산을 수행합니다.
         /// 반환값은 수행한 연산의 비용입니다.
         /// 존재하지 않는 음표를 교체하려고 하는 경우
         /// 교체 연산을 수행하지 않고 INVALID_COST를 반환합니다.
@@ -535,7 +530,7 @@ namespace MidiAnalyzer
                 {
                     if (!m.noteNodes.Remove(node))
                     {
-                        Console.WriteLine("Error: MelodicContour MoveNote metadata 1");
+                        Console.WriteLine("Error: MelodicContour ReplaceNote metadata 1");
                         return INVALID_COST;
                     }
                     if (m.noteNodes.Count == 0)
@@ -546,7 +541,7 @@ namespace MidiAnalyzer
                 }
                 else
                 {
-                    Console.WriteLine("Error: MelodicContour MoveNote metadata 2");
+                    Console.WriteLine("Error: MelodicContour ReplaceNote metadata 2");
                     return INVALID_COST;
                 }
             }
@@ -610,7 +605,7 @@ namespace MidiAnalyzer
 
         /// <summary>
         /// 멜로디 형태에 있던 음표 하나의 인덱스(음표 목록에서의 상대적 위치)를 유지하면서
-        /// Duration과 클러스터를 교체하는 연산을 수행합니다.
+        /// 길이와 클러스터를 교체하는 연산을 수행합니다.
         /// 반환값은 수행한 연산의 비용입니다.
         /// 존재하지 않는 음표를 교체하려고 하는 경우
         /// 교체 연산을 수행하지 않고 INVALID_COST를 반환합니다.
@@ -641,8 +636,335 @@ namespace MidiAnalyzer
             else
             {
                 firstRestDuration = newFirstRestDuration;
-                return FIRST_REST_DURATION_COST;
+                return DURATION_COST;
             }
+        }
+
+        /// <summary>
+        /// 멜로디 형태에 있던 연속된 음표 두 개의
+        /// 인덱스(음표 목록에서의 상대적 위치)와 길이의 합을 유지하면서
+        /// 두 음표의 길이와 클러스터를 동시에 옮기는 연산을 수행합니다.
+        /// 반환값은 수행한 연산의 비용이며,
+        /// 같은 결과를 내는 두 연산(Replace + Replace)을 따로 수행하는 것보다 저렴합니다.
+        /// 존재하지 않는 음표를 옮기려고 하거나
+        /// 연산 전후로 두 음표의 길이의 합이 달라지거나
+        /// 앞 음표부터 적용한 비용이 0인 교체 연산(ReplaceNote()) 두 번으로
+        /// 같은 결과를 낼 수 있는 경우
+        /// 옮기기 연산을 수행하지 않고 INVALID_COST를 반환합니다.
+        /// (새 음표를 정의할 때 GetNewClusterNumber() 또는
+        /// GetExistingClusterNumber()를 사용하면 편리합니다.)
+        /// </summary>
+        /// <param name="oldFirstNoteIndex">옮길 대상이 될 기존 음표들 중 앞 음표의 음표 목록에서의 인덱스</param>
+        /// <param name="newFirstNote">옮길 새 음표들 중 앞 음표</param>
+        /// <param name="newSecondNote">옮길 새 음표들 중 뒤 음표</param>
+        /// <returns></returns>
+        public int MoveNotes(int oldFirstNoteIndex, MelodicContourNote newFirstNote, MelodicContourNote newSecondNote)
+        {
+            if (newFirstNote == null || newFirstNote.Duration <= 0 ||
+                newSecondNote == null || newSecondNote.Duration <= 0) return INVALID_COST;
+            newFirstNote = newFirstNote.Copy();
+            newSecondNote = newSecondNote.Copy();
+
+            if (oldFirstNoteIndex >= noteList.Count - 1) return INVALID_COST;
+
+            LinkedListNode<MelodicContourNote> node1 = GetNoteNodeByIndex(oldFirstNoteIndex);
+            LinkedListNode<MelodicContourNote> node2 = GetNoteNodeByIndex(oldFirstNoteIndex + 1);
+
+            if (node1 == null || node2 == null) return INVALID_COST;
+
+            MelodicContourNote oldFirstNote = node1.Value;
+            MelodicContourNote oldSecondNote = node2.Value;
+
+            if (oldFirstNote.Duration == newFirstNote.Duration &&
+                oldSecondNote.Duration == newSecondNote.Duration)
+            {
+                // 이 경우 ReplaceNote 두 번을 수행하는 것으로 대체할 수 있음
+                return INVALID_COST;
+            }
+
+            if (oldFirstNote.Duration + oldSecondNote.Duration != newFirstNote.Duration + newSecondNote.Duration)
+            {
+                // 기존의 연속된 두 음표의 길이의 합과 새 연속된 두 음표의 길이의 합이 같지 않으면 이 연산을 수행할 수 없음
+                return INVALID_COST;
+            }
+
+            int oldPv1 = PitchVariance(node1);
+            int oldClusterIndex1 = GetClusterRank(node1);
+            int oldPv2 = PitchVariance(node2);
+            int oldClusterIndex2 = GetClusterRank(node2);
+
+            MelodicContourMetadata m1 = metadataList.Find(e => e.pitchCluster == oldFirstNote.PitchCluster);
+            MelodicContourMetadata m2 = metadataList.Find(e => e.pitchCluster == oldSecondNote.PitchCluster);
+            bool deleteM1 = false;
+            bool deleteM2 = false;
+
+            // 메타데이터 편집
+            // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
+            if (oldFirstNote.PitchCluster != newFirstNote.PitchCluster)
+            {
+                // 기존 음표에 대한 메타데이터 수정
+                if (m1 != null)
+                {
+                    // 여기서는 지울 수 있는지 확인만 하고, 두 음표의 확인이 모두 끝나면 일괄적으로 제거
+                    if (!m1.noteNodes.Contains(node1))
+                    {
+                        Console.WriteLine("Error: MelodicContour MoveNotes metadata 1");
+                        return INVALID_COST;
+                    }
+                    else
+                    {
+                        deleteM1 = true;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error: MelodicContour MoveNotes metadata 2");
+                    return INVALID_COST;
+                }
+            }
+
+            // 메타데이터 편집
+            // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
+            if (oldSecondNote.PitchCluster != newSecondNote.PitchCluster)
+            {
+                if (m2 != null)
+                {
+                    // 여기서는 지울 수 있는지 확인만 하고, 두 음표의 확인이 모두 끝나면 일괄적으로 제거
+                    if (!m2.noteNodes.Contains(node2))
+                    {
+                        Console.WriteLine("Error: MelodicContour MoveNotes metadata 3");
+                        return INVALID_COST;
+                    }
+                    else
+                    {
+                        deleteM2 = true;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error: MelodicContour MoveNotes metadata 4");
+                    return INVALID_COST;
+                }
+            }
+
+            if (deleteM1)
+            {
+                // 기존 음표에 대한 메타데이터 수정
+                m1.noteNodes.Remove(node1);
+                if (m1.noteNodes.Count == 0)
+                {
+                    // 이 클러스터에 해당하는 음표가 모두 제거된 경우 메타데이터 제거
+                    metadataList.Remove(m1);
+                }
+            }
+
+            if (deleteM2)
+            {
+                // 기존 음표에 대한 메타데이터 수정
+                m2.noteNodes.Remove(node2);
+                if (m2.noteNodes.Count == 0)
+                {
+                    // 이 클러스터에 해당하는 음표가 모두 제거된 경우 메타데이터 제거
+                    metadataList.Remove(m2);
+                }
+            }
+
+            // (앞 또는 뒤 음표 길이 변경 비용)
+            int beta = DURATION_COST;
+
+            // 새 음표로 교체
+            node1.Value = newFirstNote;
+            newFirstNote.pitchVariance = -2;
+            node2.Value = newSecondNote;
+            newSecondNote.pitchVariance = -2;
+
+            int alpha = 0;
+            int newPv1 = PitchVariance(node1);
+            int newPv2 = PitchVariance(node2);
+            if (oldPv1 != newPv1)
+            {
+                // (교체한 음표의 음 높이 변화 변경 비용)
+                alpha += PITCH_VARIANCE_COST;
+            }
+            if (oldPv2 != newPv2)
+            {
+                // (교체한 음표의 음 높이 변화 변경 비용)
+                alpha += PITCH_VARIANCE_COST;
+            }
+
+            int newClusterIndex1 = GetClusterRank(node1);
+            int newClusterIndex2 = GetClusterRank(node2);
+            if (oldClusterIndex1 != newClusterIndex1)
+            {
+                // (교체한 음표의 클러스터 위상 변경 비용)
+                alpha += PITCH_CLUSTER_RANK_COST;
+            }
+            if (oldClusterIndex2 != newClusterIndex2)
+            {
+                // (교체한 음표의 클러스터 위상 변경 비용)
+                alpha += PITCH_CLUSTER_RANK_COST;
+            }
+
+            if (node2.Next != null)
+            {
+                // 뒤 음표의 직후 음표의 음 높이 변화 재계산
+                node2.Next.Value.pitchVariance = -2;
+                PitchVariance(node2.Next);
+            }
+
+            if (oldFirstNote.PitchCluster != newFirstNote.PitchCluster)
+            {
+                // 새 앞 음표에 대한 메타데이터 수정
+                MelodicContourMetadata m = metadataList.Find(e => e.pitchCluster == newFirstNote.PitchCluster);
+                if (m != null)
+                {
+                    // 이미 같은 클러스터 번호의 음표가 존재하는 경우
+                    m.noteNodes.Add(node1);
+                }
+                else
+                {
+                    // 새로운 클러스터 번호를 가진 경우 메타데이터 추가 후 정렬
+                    m = new MelodicContourMetadata(newFirstNote.PitchCluster, node1);
+                    metadataList.Add(m);
+                    metadataList.Sort();
+                }
+            }
+            if (oldSecondNote.PitchCluster != newSecondNote.PitchCluster)
+            {
+                // 새 뒤 음표에 대한 메타데이터 수정
+                MelodicContourMetadata m = metadataList.Find(e => e.pitchCluster == newSecondNote.PitchCluster);
+                if (m != null)
+                {
+                    // 이미 같은 클러스터 번호의 음표가 존재하는 경우
+                    m.noteNodes.Add(node2);
+                }
+                else
+                {
+                    // 새로운 클러스터 번호를 가진 경우 메타데이터 추가 후 정렬
+                    m = new MelodicContourMetadata(newSecondNote.PitchCluster, node2);
+                    metadataList.Add(m);
+                    metadataList.Sort();
+                }
+            }
+
+            return beta + alpha;
+        }
+
+        /// <summary>
+        /// 멜로디 형태에 있던 맨 앞 쉼표와 맨 처음 음표의 길이의 합을 유지하면서
+        /// 쉼표 및 음표의 길이와 클러스터를 동시에 교체하는 연산을 수행합니다.
+        /// 반환값은 수행한 연산의 비용이며,
+        /// 같은 결과를 내는 두 연산(Delay + Replace)을 따로 수행하는 것보다 저렴합니다.
+        /// 멜로디 형태에 아무 음표도 들어있지 않거나
+        /// 연산 전후로 쉼표 및 음표의 길이의 합이 달라지거나
+        /// 비용이 0인 쉼표 길이 변경 연산(DelayNotes())과 교체 연산(ReplaceNote())을
+        /// 차례로 수행하여 같은 결과를 낼 수 있는 경우
+        /// 옮기기 연산을 수행하지 않고 INVALID_COST를 반환합니다.
+        /// (새 음표를 정의할 때 GetNewClusterNumber() 또는
+        /// GetExistingClusterNumber()를 사용하면 편리합니다.)
+        /// </summary>
+        /// <param name="newFirstRestDuration">맨 앞에 놓이는 쉼표의 새 길이</param>
+        /// <param name="newFirstNote">맨 처음 음표가 옮겨질 새 음표</param>
+        /// <returns></returns>
+        public int DelayAndReplaceNotes(int newFirstRestDuration, MelodicContourNote newFirstNote)
+        {
+            if (newFirstRestDuration < 0 ||
+                newFirstNote == null || newFirstNote.Duration <= 0) return INVALID_COST;
+            newFirstNote = newFirstNote.Copy();
+
+            if (noteList.Count <= 0) return INVALID_COST;
+
+            LinkedListNode<MelodicContourNote> node1 = GetNoteNodeByIndex(0);
+
+            if (node1 == null) return INVALID_COST;
+
+            MelodicContourNote oldFirstNote = node1.Value;
+
+            if (firstRestDuration == newFirstRestDuration &&
+                oldFirstNote.Duration == newFirstNote.Duration)
+            {
+                // 이 경우 DelayNotes와 ReplaceNote를 차례로 수행하는 것으로 대체할 수 있음
+                return INVALID_COST;
+            }
+
+            if (firstRestDuration + oldFirstNote.Duration != newFirstRestDuration + newFirstNote.Duration)
+            {
+                // 기존의 쉼표 및 음표의 길이의 합과 새 쉼표 및 음표의 길이의 합이 같지 않으면 이 연산을 수행할 수 없음
+                return INVALID_COST;
+            }
+
+            int oldPv1 = PitchVariance(node1);
+            int oldClusterIndex1 = GetClusterRank(node1);
+
+            // 메타데이터 편집
+            // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
+            if (oldFirstNote.PitchCluster != newFirstNote.PitchCluster)
+            {
+                MelodicContourMetadata m1 = metadataList.Find(e => e.pitchCluster == oldFirstNote.PitchCluster);
+
+                // 기존 음표에 대한 메타데이터 수정
+                if (m1 != null)
+                {
+                    // 기존 음표에 대한 메타데이터 수정
+                    if (!m1.noteNodes.Remove(node1))
+                    {
+                        Console.WriteLine("Error: MelodicContour DelayAndReplaceNotes metadata 1");
+                        return INVALID_COST;
+
+                    }
+                    if (m1.noteNodes.Count == 0)
+                    {
+                        // 이 클러스터에 해당하는 음표가 모두 제거된 경우 메타데이터 제거
+                        metadataList.Remove(m1);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error: MelodicContour DelayAndReplaceNotes metadata 2");
+                    return INVALID_COST;
+                }
+            }
+
+            // (쉼표 및 음표 길이 변경 비용)
+            int beta = DURATION_COST;
+
+            // 새 음표로 교체
+            node1.Value = newFirstNote;
+            newFirstNote.pitchVariance = -2;
+
+            // 쉼표의 새 길이로 설정
+            firstRestDuration = newFirstRestDuration;
+
+            int newPv1 = PitchVariance(node1);
+
+            int newClusterIndex1 = GetClusterRank(node1);
+
+            if (node1.Next != null)
+            {
+                // 맨 처음 음표의 직후 음표의 음 높이 변화 재계산
+                node1.Next.Value.pitchVariance = -2;
+                PitchVariance(node1.Next);
+            }
+
+            if (oldFirstNote.PitchCluster != newFirstNote.PitchCluster)
+            {
+                // 새 음표에 대한 메타데이터 수정
+                MelodicContourMetadata m = metadataList.Find(e => e.pitchCluster == newFirstNote.PitchCluster);
+                if (m != null)
+                {
+                    // 이미 같은 클러스터 번호의 음표가 존재하는 경우
+                    m.noteNodes.Add(node1);
+                }
+                else
+                {
+                    // 새로운 클러스터 번호를 가진 경우 메타데이터 추가 후 정렬
+                    m = new MelodicContourMetadata(newFirstNote.PitchCluster, node1);
+                    metadataList.Add(m);
+                    metadataList.Sort();
+                }
+            }
+
+            return beta;
         }
 
         /// <summary>
@@ -676,6 +998,20 @@ namespace MidiAnalyzer
                         return INVALID_COST;
                     else
                         return DelayNotes(operation.firstRestDurationAfterOp);
+                case OperationInfo.Type.Move:
+                    node = GetNoteNodeByIndex(operation.noteIndex);
+                    if (node == null || !operation.noteBeforeOp.Equals(node.Value) ||
+                        node.Next == null || !operation.note2BeforeOp.Equals(node.Next.Value))
+                        return INVALID_COST;
+                    else
+                        return MoveNotes(operation.noteIndex, operation.noteAfterOp, operation.note2AfterOp);
+                case OperationInfo.Type.DelayAndReplace:
+                    node = GetNoteNodeByIndex(operation.noteIndex);
+                    if (firstRestDuration != operation.firstRestDurationBeforeOp ||
+                        node == null || !operation.noteBeforeOp.Equals(node.Value))
+                        return INVALID_COST;
+                    else
+                        return DelayAndReplaceNotes(operation.firstRestDurationAfterOp, operation.noteAfterOp);
                 default:
                     return INVALID_COST;
             }
@@ -1394,7 +1730,7 @@ namespace MidiAnalyzer
         /// </summary>
         public class OperationInfo
         {
-            public enum Type { Invalid = 0, Delete = 1, Insert = 2, Replace = 3, Delay = 4 }
+            public enum Type { Invalid = 0, Delete = 1, Insert = 2, Replace = 3, Delay = 4, Move = 5, DelayAndReplace = 6 }
 
             /// <summary>
             /// 편집 연산 종류
@@ -1403,20 +1739,38 @@ namespace MidiAnalyzer
 
             /// <summary>
             /// 연산을 적용한 음표의 인덱스.
+            /// Move 연산에서는 앞 음표의 인덱스가 됩니다.
+            /// DelayAndReplace 연산에서는 0이 됩니다.
             /// </summary>
             public int noteIndex;
 
             /// <summary>
             /// 연산을 적용한 음표의 연산 직전 상태.
+            /// Move 연산에서는 앞 음표의 연산 직전 상태가 됩니다.
+            /// DelayAndReplace 연산에서는 처음 음표의 연산 직전 상태가 됩니다.
             /// Insert 연산에서는 없는 음표를 나타내는 new MelodicContourNote()가 됩니다.
             /// </summary>
             public MelodicContourNote noteBeforeOp;
 
             /// <summary>
+            /// Move 연산을 적용한 뒤 음표의 연산 직전 상태.
+            /// 다른 연산에서는 없는 음표를 나타내는 new MelodicContourNote()가 됩니다.
+            /// </summary>
+            public MelodicContourNote note2BeforeOp;
+
+            /// <summary>
             /// 연산을 적용한 음표의 연산 직후 상태.
+            /// Move 연산에서는 앞 음표의 연산 직후 상태가 됩니다.
+            /// DelayAndReplace 연산에서는 처음 음표의 연산 직후 상태가 됩니다.
             /// Delete 연산에서는 없는 음표를 나타내는 new MelodicContourNote()가 됩니다.
             /// </summary>
             public MelodicContourNote noteAfterOp;
+
+            /// <summary>
+            /// Move 연산을 적용한 뒤 음표의 연산 직후 상태.
+            /// 다른 연산에서는 없는 음표를 나타내는 new MelodicContourNote()가 됩니다.
+            /// </summary>
+            public MelodicContourNote note2AfterOp;
 
             /// <summary>
             /// 편집 연산을 수행한 비용.
@@ -1427,13 +1781,13 @@ namespace MidiAnalyzer
 
             /// <summary>
             /// 연산 직전 멜로디 형태의 맨 앞 쉼표 길이.
-            /// Delay 연산에서만 음수가 아닌 값을 가집니다.
+            /// Delay와 DelayAndReplace 연산에서만 음수가 아닌 값을 가집니다.
             /// </summary>
             public int firstRestDurationBeforeOp;
 
             /// <summary>
             /// 연산 직후 멜로디 형태의 맨 앞 쉼표 길이.
-            /// Delay 연산에서만 음수가 아닌 값을 가집니다.
+            /// Delay와 DelayAndReplace 연산에서만 음수가 아닌 값을 가집니다.
             /// </summary>
             public int firstRestDurationAfterOp;
 
@@ -1456,6 +1810,8 @@ namespace MidiAnalyzer
                         this.noteIndex = noteIndex;
                         this.noteBeforeOp = noteBeforeOp.Copy();
                         this.noteAfterOp = new MelodicContourNote();
+                        this.note2BeforeOp = new MelodicContourNote();
+                        this.note2AfterOp = new MelodicContourNote();
                         this.cost = cost;
                         this.firstRestDurationBeforeOp = -1;
                         this.firstRestDurationAfterOp = -1;
@@ -1465,6 +1821,8 @@ namespace MidiAnalyzer
                         this.noteIndex = noteIndex;
                         this.noteBeforeOp = new MelodicContourNote();
                         this.noteAfterOp = noteAfterOp.Copy();
+                        this.note2BeforeOp = new MelodicContourNote();
+                        this.note2AfterOp = new MelodicContourNote();
                         this.cost = cost;
                         this.firstRestDurationBeforeOp = -1;
                         this.firstRestDurationAfterOp = -1;
@@ -1474,72 +1832,22 @@ namespace MidiAnalyzer
                         this.noteIndex = noteIndex;
                         this.noteBeforeOp = noteBeforeOp.Copy();
                         this.noteAfterOp = noteAfterOp.Copy();
+                        this.note2BeforeOp = new MelodicContourNote();
+                        this.note2AfterOp = new MelodicContourNote();
                         this.cost = cost;
                         this.firstRestDurationBeforeOp = -1;
                         this.firstRestDurationAfterOp = -1;
                         break;
+                    case Type.Move:
                     case Type.Delay:
+                    case Type.DelayAndReplace:
                     default:
                         this.type = Type.Invalid;
                         this.noteIndex = -1;
                         this.noteBeforeOp = new MelodicContourNote();
                         this.noteAfterOp = new MelodicContourNote();
-                        this.cost = INVALID_COST;
-                        this.firstRestDurationBeforeOp = -1;
-                        this.firstRestDurationAfterOp = -1;
-                        break;
-                }
-            }
-
-            /// <summary>
-            /// 연산 종류가 Delete, Insert, Replace일 때 사용하십시오.
-            /// </summary>
-            /// <param name="operationCode"></param>
-            /// <param name="noteIndex"></param>
-            /// <param name="noteBeforeOp"></param>
-            /// <param name="noteAfterOp"></param>
-            /// <param name="cost"></param>
-            public OperationInfo(int operationCode, int noteIndex,
-                MelodicContourNote noteBeforeOp, MelodicContourNote noteAfterOp,
-                int cost = INVALID_COST)
-            {
-                switch (operationCode)
-                {
-                    case 1:
-                    case -1:
-                        this.type = Type.Delete;
-                        this.noteIndex = noteIndex;
-                        this.noteBeforeOp = noteBeforeOp.Copy();
-                        this.noteAfterOp = new MelodicContourNote();
-                        this.cost = cost;
-                        this.firstRestDurationBeforeOp = -1;
-                        this.firstRestDurationAfterOp = -1;
-                        break;
-                    case 2:
-                    case -2:
-                        this.type = Type.Insert;
-                        this.noteIndex = noteIndex;
-                        this.noteBeforeOp = new MelodicContourNote();
-                        this.noteAfterOp = noteAfterOp.Copy();
-                        this.cost = cost;
-                        this.firstRestDurationBeforeOp = -1;
-                        this.firstRestDurationAfterOp = -1;
-                        break;
-                    case 3:
-                    case -3:
-                        this.type = Type.Replace;
-                        this.noteIndex = noteIndex;
-                        this.noteBeforeOp = noteBeforeOp.Copy();
-                        this.noteAfterOp = noteAfterOp.Copy();
-                        this.cost = cost;
-                        this.firstRestDurationBeforeOp = -1;
-                        this.firstRestDurationAfterOp = -1;
-                        break;
-                    default:
-                        this.type = Type.Invalid;
-                        this.noteIndex = -1;
-                        this.noteBeforeOp = new MelodicContourNote();
-                        this.noteAfterOp = new MelodicContourNote();
+                        this.note2BeforeOp = new MelodicContourNote();
+                        this.note2AfterOp = new MelodicContourNote();
                         this.cost = INVALID_COST;
                         this.firstRestDurationBeforeOp = -1;
                         this.firstRestDurationAfterOp = -1;
@@ -1561,9 +1869,54 @@ namespace MidiAnalyzer
                 this.noteIndex = -1;
                 this.noteBeforeOp = new MelodicContourNote();
                 this.noteAfterOp = new MelodicContourNote();
+                this.note2BeforeOp = new MelodicContourNote();
+                this.note2AfterOp = new MelodicContourNote();
                 this.cost = cost;
                 this.firstRestDurationBeforeOp = firstRestDurationBeforeOp;
                 this.firstRestDurationAfterOp = firstRestDurationAfterOp;
+            }
+
+            /// <summary>
+            /// 연산 종류가 Move일 때 사용하십시오.
+            /// </summary>
+            /// <param name="note1Index"></param>
+            /// <param name="note1BeforeOp"></param>
+            /// <param name="note2BeforeOp"></param>
+            /// <param name="note1AfterOp"></param>
+            /// <param name="note2AfterOp"></param>
+            /// <param name="cost"></param>
+            public OperationInfo(int note1Index,
+                MelodicContourNote note1BeforeOp, MelodicContourNote note2BeforeOp,
+                MelodicContourNote note1AfterOp, MelodicContourNote note2AfterOp,
+                int cost = INVALID_COST)
+            {
+                this.type = Type.Move;
+                this.noteIndex = note1Index;
+                this.noteBeforeOp = note1BeforeOp.Copy();
+                this.note2BeforeOp = note2BeforeOp.Copy();
+                this.noteAfterOp = note1AfterOp.Copy();
+                this.note2AfterOp = note2AfterOp.Copy();
+                this.cost = cost;
+                this.firstRestDurationBeforeOp = -1;
+                this.firstRestDurationAfterOp = -1;
+            }
+
+            /// <summary>
+            /// 연산 종류가 DelayAndReplace일 때 사용하십시오.
+            /// </summary>
+            public OperationInfo(int firstRestDurationBeforeOp, int firstRestDurationAfterOp,
+                MelodicContourNote noteBeforeOp, MelodicContourNote noteAfterOp,
+                int cost = INVALID_COST)
+            {
+                this.type = Type.DelayAndReplace;
+                this.noteIndex = 0;
+                this.firstRestDurationBeforeOp = firstRestDurationBeforeOp;
+                this.firstRestDurationAfterOp = firstRestDurationAfterOp;
+                this.noteBeforeOp = noteBeforeOp.Copy();
+                this.noteAfterOp = noteAfterOp.Copy();
+                this.note2BeforeOp = new MelodicContourNote();
+                this.note2AfterOp = new MelodicContourNote();
+                this.cost = cost;
             }
 
             /// <summary>
@@ -1582,6 +1935,10 @@ namespace MidiAnalyzer
                         return new OperationInfo(Type.Replace, this.noteIndex, this.noteAfterOp, this.noteBeforeOp, this.cost);
                     case Type.Delay:
                         return new OperationInfo(this.firstRestDurationAfterOp, this.firstRestDurationBeforeOp, this.cost);
+                    case Type.Move:
+                        return new OperationInfo(this.noteIndex, this.noteAfterOp, this.note2AfterOp, this.noteBeforeOp, this.note2BeforeOp, this.cost);
+                    case Type.DelayAndReplace:
+                        return new OperationInfo(this.firstRestDurationAfterOp, this.firstRestDurationBeforeOp, this.noteAfterOp, this.noteBeforeOp, this.cost);
                     default:
                         return new OperationInfo(Type.Invalid, -1, new MelodicContourNote(), new MelodicContourNote());
                 }
@@ -1603,6 +1960,25 @@ namespace MidiAnalyzer
                 if (type == Type.Delay)
                 {
                     s += "(" + firstRestDurationBeforeOp + " -> " + firstRestDurationAfterOp + ")";
+                    if (printCost) s += ": " + cost;
+                    Console.WriteLine(s);
+                    return;
+                }
+                if (type == Type.Move)
+                {
+                    s += "(" + noteIndex + ", [" + noteBeforeOp.Duration + ", " + noteBeforeOp.PitchCluster + "] -> [" +
+                        noteAfterOp.Duration + ", " + noteAfterOp.PitchCluster + "], " +
+                        (noteIndex + 1) + ", [" + note2BeforeOp.Duration + ", " + note2BeforeOp.PitchCluster + "] -> [" +
+                        note2AfterOp.Duration + ", " + note2AfterOp.PitchCluster + "])";
+                    if (printCost) s += ": " + cost;
+                    Console.WriteLine(s);
+                    return;
+                }
+                if (type == Type.DelayAndReplace)
+                {
+                    s += "(" + firstRestDurationBeforeOp + " -> " + firstRestDurationAfterOp + ", " +
+                        noteIndex + ", [" + noteBeforeOp.Duration + ", " + noteBeforeOp.PitchCluster + "] -> [" +
+                        noteAfterOp.Duration + ", " + noteAfterOp.PitchCluster + "])";
                     if (printCost) s += ": " + cost;
                     Console.WriteLine(s);
                     return;
