@@ -40,7 +40,7 @@ namespace MidiAnalyzer.Test
         {
             //ChordRecognitionTest();
             //MelodicContourEditTest();
-            MelodicContourDistanceTest();
+            //MelodicContourDistanceTest();
         }
 
         private void ChordRecognitionTest()

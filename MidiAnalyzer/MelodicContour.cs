@@ -160,7 +160,7 @@ namespace MidiAnalyzer
         /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 개수가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
-        public const int PITCH_CLUSTER_COUNT_COST = 1;
+        public const int PITCH_CLUSTER_COUNT_COST = 0;
 
         /// <summary>
         /// 음표 목록에 있는 한 음표가 직전 음표보다 높은 음을 가지면 1,
@@ -410,7 +410,13 @@ namespace MidiAnalyzer
             }
 
             // 메타데이터 편집
-            int oldMetadataListCount = GetClusterCount(node.Previous);
+            int oldMetadataListCount = 0;
+            if (PITCH_CLUSTER_COUNT_COST > 0)
+            {
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                oldMetadataListCount = GetClusterCount(node.Previous);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
+            }
 
             MelodicContourMetadata m = metadataList.Find(e => e.pitchCluster == note.PitchCluster);
             if (m != null)
@@ -427,10 +433,15 @@ namespace MidiAnalyzer
             }
 
             int gamma = 0;
-            if (GetClusterCount(node) != oldMetadataListCount)
+            if (PITCH_CLUSTER_COUNT_COST > 0)
             {
-                // (음 높이 클러스터 개수 변경 비용)
-                gamma = PITCH_CLUSTER_COUNT_COST;
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                if (GetClusterCount(node) != oldMetadataListCount)
+                {
+                    // (음 높이 클러스터 개수 변경 비용)
+                    gamma = PITCH_CLUSTER_COUNT_COST;
+                }
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
 
             if (node.Next != null)
@@ -489,7 +500,13 @@ namespace MidiAnalyzer
             MelodicContourNote note = node.Value;
 
             // 메타데이터 편집
-            int oldMetadataListCount = GetClusterCount(node);
+            int oldMetadataListCount = 0;
+            if (PITCH_CLUSTER_COUNT_COST > 0)
+            {
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                oldMetadataListCount = GetClusterCount(node);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
+            }
 
             MelodicContourMetadata m = metadataList.Find(e => e.pitchCluster == note.PitchCluster);
             if (m != null)
@@ -512,10 +529,15 @@ namespace MidiAnalyzer
             }
 
             int gamma = 0;
-            if (GetClusterCount(node.Previous) != oldMetadataListCount)
+            if (PITCH_CLUSTER_COUNT_COST > 0)
             {
-                // (음 높이 클러스터 개수 변경 비용)
-                gamma = PITCH_CLUSTER_COUNT_COST;
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                if (GetClusterCount(node.Previous) != oldMetadataListCount)
+                {
+                    // (음 높이 클러스터 개수 변경 비용)
+                    gamma = PITCH_CLUSTER_COUNT_COST;
+                }
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
 
             int pv = PitchVariance(node);
@@ -572,7 +594,13 @@ namespace MidiAnalyzer
 
             // 메타데이터 편집
             // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
-            int oldMetadataListCount = GetClusterCount(node);
+            int oldMetadataListCount = 0;
+            if (PITCH_CLUSTER_COUNT_COST > 0)
+            {
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                oldMetadataListCount = GetClusterCount(node);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
+            }
 
             if (oldNote.PitchCluster != newNote.PitchCluster)
             {
@@ -653,10 +681,15 @@ namespace MidiAnalyzer
             }
 
             int gamma = 0;
-            if (GetClusterCount(node) != oldMetadataListCount)
+            if (PITCH_CLUSTER_COUNT_COST > 0)
             {
-                // (음 높이 클러스터 개수 변경 비용)
-                gamma = PITCH_CLUSTER_COUNT_COST;
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                if (GetClusterCount(node) != oldMetadataListCount)
+                {
+                    // (음 높이 클러스터 개수 변경 비용)
+                    gamma = PITCH_CLUSTER_COUNT_COST;
+                }
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
 
             return beta + alpha + gamma;
@@ -784,7 +817,13 @@ namespace MidiAnalyzer
 
             // 메타데이터 편집
             // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
-            int oldMetadataListCount = GetClusterCount(node2);
+            int oldMetadataListCount = 0;
+            if (PITCH_CLUSTER_COUNT_COST > 0)
+            {
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                oldMetadataListCount = GetClusterCount(node2);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
+            }
 
             if (oldSecondNote.PitchCluster != newSecondNote.PitchCluster)
             {
@@ -909,10 +948,15 @@ namespace MidiAnalyzer
             }
 
             int gamma = 0;
-            if (GetClusterCount(node2) != oldMetadataListCount)
+            if (PITCH_CLUSTER_COUNT_COST > 0)
             {
-                // (음 높이 클러스터 개수 변경 비용)
-                gamma = PITCH_CLUSTER_COUNT_COST;
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                if (GetClusterCount(node2) != oldMetadataListCount)
+                {
+                    // (음 높이 클러스터 개수 변경 비용)
+                    gamma = PITCH_CLUSTER_COUNT_COST;
+                }
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
 
             return beta + alpha + gamma;
@@ -966,7 +1010,13 @@ namespace MidiAnalyzer
 
             // 메타데이터 편집
             // 기존 음표와 새 음표의 클러스터 번호가 서로 같은 경우 건드릴 필요 없음
-            int oldMetadataListCount = GetClusterCount(node1);
+            int oldMetadataListCount = 0;
+            if (PITCH_CLUSTER_COUNT_COST > 0)
+            {
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                oldMetadataListCount = GetClusterCount(node1);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
+            }
 
             if (oldFirstNote.PitchCluster != newFirstNote.PitchCluster)
             {
@@ -1035,10 +1085,15 @@ namespace MidiAnalyzer
             }
 
             int gamma = 0;
-            if (GetClusterCount(node1) != oldMetadataListCount)
+            if (PITCH_CLUSTER_COUNT_COST > 0)
             {
-                // (음 높이 클러스터 개수 변경 비용)
-                gamma = PITCH_CLUSTER_COUNT_COST;
+#pragma warning disable CS0162 // 접근할 수 없는 코드가 있습니다.
+                if (GetClusterCount(node1) != oldMetadataListCount)
+                {
+                    // (음 높이 클러스터 개수 변경 비용)
+                    gamma = PITCH_CLUSTER_COUNT_COST;
+                }
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
 
             return beta + gamma;
@@ -1215,6 +1270,7 @@ namespace MidiAnalyzer
             List<List<DistanceTable>> distanceTable =
                 new List<List<DistanceTable>>(lenThis + 1);
             int delayCost = 0;
+            int pitchClusterCountCost = 0;
 
             for (int i = 0; i <= lenThis; i++)
             {
@@ -1468,6 +1524,11 @@ namespace MidiAnalyzer
 
             #endregion
 
+            #region this 멜로디 형태와 other 멜로디 형태의 음 높이 클러스터 개수 차이 계산
+
+            pitchClusterCountCost = Math.Abs(this.metadataList.Count - other.metadataList.Count);
+
+            #endregion
 
             if (DISTANCE_DEBUG)
             {
@@ -1497,12 +1558,14 @@ namespace MidiAnalyzer
                     Console.WriteLine(mcForTest2.PerformOperation(o));
                 }
                 mcForTest2.Print();
-#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
 
                 #endregion
+
+                Console.WriteLine("Pitch Cluster Count Cost: " + pitchClusterCountCost);
+#pragma warning restore CS0162 // 접근할 수 없는 코드가 있습니다.
             }
 
-            return distanceTable[lenThis][lenOther].Distance + delayCost;
+            return distanceTable[lenThis][lenOther].Distance + delayCost + pitchClusterCountCost;
         }
 
         /// <summary>
