@@ -121,11 +121,11 @@ namespace MidiAnalyzer
                 if (i < score.Count - 1)
                     this.InsertNote(noteList.Count,
                         (int)(score[i + 1].GetAbsolutePosition() - score[i].GetAbsolutePosition()),
-                        score[i].Pitch);
+                        score[i].Pitch - score[0].Pitch);
                 else                                    // Last note
                     this.InsertNote(noteList.Count,
                         (int)(endNote.GetAbsolutePosition() - score[i].GetAbsolutePosition()),
-                        score[i].Pitch);
+                        score[i].Pitch - score[0].Pitch);
             }
         }
 
