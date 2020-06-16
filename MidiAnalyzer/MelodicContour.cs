@@ -1176,7 +1176,7 @@ namespace MidiAnalyzer
             int onset = firstRestDuration;
             int length = onset;
             string print = "";
-            print += firstRestDuration;
+            print += firstRestDuration.ToString();
             foreach (MelodicContourNote note in noteList)
             {
                 print += " [" + note.Duration + "," + note.PitchCluster + "]";

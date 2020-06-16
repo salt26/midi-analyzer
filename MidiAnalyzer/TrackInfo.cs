@@ -45,6 +45,7 @@ namespace MidiAnalyzer
         // representatives[melodicContourID] = KeyValuePair(measureNum, melodicContour)
         public Dictionary<int, KeyValuePair<int, MelodicContour>> representatives;
         public Dictionary<int, string> clusterOutputs;
+        public List<int> clusterIDs;
 
         public AnalysisStatus status;
 
@@ -56,6 +57,7 @@ namespace MidiAnalyzer
             score = new List<Note>();
             representatives = new Dictionary<int, KeyValuePair<int, MelodicContour>>();
             clusterOutputs = new Dictionary<int, string>();
+            clusterIDs = new List<int>();
             status = AnalysisStatus.Wait;
         }
     }

@@ -465,13 +465,18 @@ namespace MidiAnalyzer
                 foreach (var p in result.Clusters)
                 {
                     Console.WriteLine("Cluster " + p.Key);
+
                     string clusterOutput = "";
                     if (p.Value.Count() > 0)
                     {
+                        clusterOutput += p.Key + "번 클러스터\n\n";
                         track.representatives[p.Key] = p.Value[0].Feature;
+                        int k = 0;
                         foreach (var point in p.Value)
                         {
                             clusterOutput += point.Feature.Key + ", ";
+                            k++;
+                            if (k % 10 == 0) clusterOutput += "\n";
                         }
                         clusterOutput = clusterOutput.Substring(0, clusterOutput.LastIndexOf(','));
                         clusterOutput += "번 마디 포함\n";
@@ -482,15 +487,18 @@ namespace MidiAnalyzer
                         //Console.WriteLine("Measure " + point.Feature.Key + ": " + point.PointType);
                         //point.Feature.Value.Print();
 
-                        clusterOutput += "----------------------------------------\n";
-                        clusterOutput += point.Feature.Key + "번 마디";
+                        clusterOutput += "\n\n";
                         if (track.representatives[p.Key].Key == point.Feature.Key)
                         {
-                            clusterOutput += " (대표 멜로디 형태)";
+                            clusterOutput += point.Feature.Key + "번 마디의 멜로디 형태 (대표 멜로디 형태)\n";
                         }
-                        clusterOutput += "\n";
+                        else
+                        {
+                            clusterOutput += point.Feature.Key + "번 마디의 멜로디 형태\n";
+                        }
                         clusterOutput += point.Feature.Value.PrintToString();
                     }
+                    track.clusterIDs.Add(p.Key);
                     track.clusterOutputs[p.Key] = clusterOutput;
                     Console.WriteLine(clusterOutput);
                     //Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -500,28 +508,42 @@ namespace MidiAnalyzer
                 int uniqueID = -1 * (result.Clusters.Count + 1);
                 string clusterOutput2 = "";
 
-                foreach (var point in result.Noise)
+                if (result.Noise.Length > 0)
                 {
-                    clusterOutput2 += point.Feature.Key + ", ";
-                }
-                clusterOutput2 = clusterOutput2.Substring(0, clusterOutput2.LastIndexOf(','));
-                clusterOutput2 += "번 마디 포함\n";
+                    clusterOutput2 += "단독 클러스터 (클러스터 번호가 음수인 마디의 모음)\n\n";
+                    int k = 0;
+                    foreach (var point in result.Noise)
+                    {
+                        clusterOutput2 += point.Feature.Key + ", ";
+                        k++;
+                        if (k % 10 == 0) clusterOutput2 += "\n";
+                    }
+                    clusterOutput2 = clusterOutput2.Substring(0, clusterOutput2.LastIndexOf(','));
+                    clusterOutput2 += "번 마디 포함\n";
 
-                foreach (var point in result.Noise)
+                    foreach (var point in result.Noise)
+                    {
+                        // No cluster
+                        track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = uniqueID;
+                        //Console.WriteLine("Measure " + point.Feature.Key + " -> " + uniqueID);
+                        //point.Feature.Value.Print();
+
+                        clusterOutput2 += "\n\n";
+                        clusterOutput2 += point.Feature.Key + "번 마디의 멜로디 형태 -> " + uniqueID + "번 클러스터\n";
+                        clusterOutput2 += point.Feature.Value.PrintToString();
+
+                        uniqueID--;
+                    }
+                }
+                else
                 {
-                    // No cluster
-                    track.measures.Find(e => e.measureNum == point.Feature.Key).melodicContourID = uniqueID;
-                    //Console.WriteLine("Measure " + point.Feature.Key + " -> " + uniqueID);
-                    //point.Feature.Value.Print();
-
-                    clusterOutput2 += "----------------------------------------\n";
-                    clusterOutput2 += point.Feature.Key + "번 마디\n";
-                    clusterOutput2 += point.Feature.Value.PrintToString();
-
-                    uniqueID--;
+                    clusterOutput2 += "단독 클러스터로 분류된 마디 없음\n";
                 }
+                track.clusterIDs.Add(0);
                 track.clusterOutputs[0] = clusterOutput2;
                 Console.WriteLine(clusterOutput2);
+
+                track.clusterIDs.Sort();
 
                 Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
 
@@ -760,7 +782,6 @@ namespace MidiAnalyzer
         private void AfterStartClustering(int trackIndex)
         {
             tableLayoutPanel1.GetControlFromPosition(1, trackIndex).Text = "분석 중...";
-            
         }
 
         private void AfterFinishClustering(int trackIndex)
@@ -769,12 +790,12 @@ namespace MidiAnalyzer
 
             if (seletedTrackIndex >= 0 && seletedTrackIndex == trackIndex)
             {
+                // 마디 정보 탭
+                (tabControl1.TabPages[1] as TabPage).Enabled = true;
+                (tabControl1.TabPages[2] as TabPage).Enabled = true;
+
                 if (tabControl1.SelectedIndex == 0)
                 {
-                    // 마디 정보 탭
-                    (tabControl1.TabPages[1] as TabPage).Enabled = true;
-                    (tabControl1.TabPages[2] as TabPage).Enabled = true;
-
                     if (measureComboBox.SelectedItem != null)
                     {
                         Measure measure = tracks[seletedTrackIndex].measures[measureComboBox.SelectedIndex];
@@ -789,6 +810,18 @@ namespace MidiAnalyzer
                         }
                     }
                 }
+                else if (tabControl1.SelectedIndex == 1)
+                {
+                    clusterComboBox.Text = "클러스터 번호 선택!";
+                    clusterComboBox.Items.Clear();
+
+                    clusterComboBox.Items.Add("단독 클러스터");
+                    for (int i = 1; i < tracks[seletedTrackIndex].clusterIDs.Count; i++)
+                    {
+                        clusterComboBox.Items.Add(tracks[seletedTrackIndex].clusterIDs[i] + "번 클러스터");
+                    }
+                    clusterMainLabel.Text = "";
+                }
             }
         }
 
@@ -796,7 +829,7 @@ namespace MidiAnalyzer
         {
             TrackInfo track = tracks[trackIndex];
 
-            tabControl1.SelectTab(0);
+            //tabControl1.SelectTab(0);
 
             measureTimeTextBox.Text = "";
             measureKeyTextBox.Text = "";
@@ -804,11 +837,14 @@ namespace MidiAnalyzer
             measureMelodicContourTextBox.Text = "";
             measureClusterTextBox.Text = "";
             measureComboBox.Text = "마디 번호 선택!";
-            panel3.Visible = false;
+            clusterComboBox.Text = "클러스터 번호 선택!";
+
+            measurePanel.Visible = false;
 
             seletedTrackIndex = trackIndex;
 
             measureComboBox.Items.Clear();
+            clusterComboBox.Items.Clear();
 
             for (int i = 0; i < track.measures.Count; i++)
             {
@@ -827,14 +863,28 @@ namespace MidiAnalyzer
             {
                 (tabControl1.TabPages[1] as TabPage).Enabled = true;
                 (tabControl1.TabPages[2] as TabPage).Enabled = true;
+                measureClusterTextBox.Enabled = true;
+                measureClusterLabel.Enabled = true;
                 measureClusterButton.Enabled = true;
+
+                clusterComboBox.Items.Add("단독 클러스터");
+                for (int i = 1; i < tracks[seletedTrackIndex].clusterIDs.Count; i++)
+                {
+                    clusterComboBox.Items.Add(tracks[seletedTrackIndex].clusterIDs[i] + "번 클러스터");
+                }
+                clusterMainLabel.Text = "";
             }
             else
             {
                 (tabControl1.TabPages[1] as TabPage).Enabled = false;
                 (tabControl1.TabPages[2] as TabPage).Enabled = false;
+                measureClusterTextBox.Enabled = false;
+                measureClusterLabel.Enabled = false;
                 measureClusterButton.Enabled = false;
+                clusterMainLabel.Text = "몇 분 정도의 시간이 소요될 수 있습니다.";
             }
+
+            clusterPanel.Visible = false;
 
             tabControl1.Visible = true;
         }
@@ -1031,12 +1081,54 @@ namespace MidiAnalyzer
             }
 
             measureComboBox.Focus();
-            panel3.Visible = true;
+            measurePanel.Visible = true;
         }
 
         private void measureClusterButton_Click(object sender, EventArgs e, int measureIndex)
         {
+            //asdf;
+        }
 
+        private void clusterComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tracks == null || seletedTrackIndex < 0 ||
+                seletedTrackIndex >= tracks.Count ||
+                clusterComboBox.SelectedIndex >= tracks[seletedTrackIndex].clusterIDs.Count)
+                return;
+
+            clusterMainLabel.Text = tracks[seletedTrackIndex].songName + " > 트랙 " +
+                tracks[seletedTrackIndex].trackNum + " > " + 
+                clusterComboBox.SelectedItem.ToString();
+
+            clusterTextBox.Clear();
+
+            string output = tracks[seletedTrackIndex].clusterOutputs[
+                tracks[seletedTrackIndex].clusterIDs[clusterComboBox.SelectedIndex]];
+
+            if (tracks[seletedTrackIndex].status == TrackInfo.AnalysisStatus.Complete)
+            {
+                clusterTextBox.Enabled = true;
+
+                foreach (string token in output.TrimEnd('\n').Split('\n'))
+                {
+                    clusterTextBox.AppendText(token);
+                    clusterTextBox.AppendText(Environment.NewLine);
+                }
+
+                // 커서가 텍스트의 시작 위치에 놓이도록 함
+                clusterTextBox.Focus();
+                clusterTextBox.SelectionStart = 0;
+                clusterTextBox.SelectionLength = 0;
+                clusterTextBox.ScrollToCaret();
+            }
+            else
+            {
+                clusterTextBox.Enabled = false;
+                clusterTextBox.Clear();
+            }
+
+            clusterComboBox.Focus();
+            clusterPanel.Visible = true;
         }
 
         // https://stackoverflow.com/questions/91778/how-to-remove-all-event-handlers-from-an-event

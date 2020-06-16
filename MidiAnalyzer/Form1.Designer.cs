@@ -81,7 +81,11 @@
             this.measureClusterLabel = new System.Windows.Forms.Label();
             this.measureClusterTextBox = new System.Windows.Forms.TextBox();
             this.measureClusterButton = new System.Windows.Forms.Button();
-            this.panel3 = new System.Windows.Forms.Panel();
+            this.measurePanel = new System.Windows.Forms.Panel();
+            this.clusterComboBox = new System.Windows.Forms.ComboBox();
+            this.clusterPanel = new System.Windows.Forms.Panel();
+            this.clusterMainLabel = new System.Windows.Forms.Label();
+            this.clusterTextBox = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericMinimumPoints)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericEpsilon)).BeginInit();
@@ -93,7 +97,9 @@
             this.panel2.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.measureTabPage.SuspendLayout();
-            this.panel3.SuspendLayout();
+            this.clusterTabPage.SuspendLayout();
+            this.measurePanel.SuspendLayout();
+            this.clusterPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
@@ -459,7 +465,7 @@
             // 
             this.measureTabPage.BackColor = System.Drawing.SystemColors.Control;
             this.measureTabPage.Controls.Add(this.measureComboBox);
-            this.measureTabPage.Controls.Add(this.panel3);
+            this.measureTabPage.Controls.Add(this.measurePanel);
             this.measureTabPage.Location = new System.Drawing.Point(4, 37);
             this.measureTabPage.Name = "measureTabPage";
             this.measureTabPage.Padding = new System.Windows.Forms.Padding(3);
@@ -470,6 +476,9 @@
             // clusterTabPage
             // 
             this.clusterTabPage.BackColor = System.Drawing.SystemColors.Control;
+            this.clusterTabPage.Controls.Add(this.clusterComboBox);
+            this.clusterTabPage.Controls.Add(this.clusterMainLabel);
+            this.clusterTabPage.Controls.Add(this.clusterPanel);
             this.clusterTabPage.Location = new System.Drawing.Point(4, 37);
             this.clusterTabPage.Name = "clusterTabPage";
             this.clusterTabPage.Padding = new System.Windows.Forms.Padding(3);
@@ -558,7 +567,7 @@
             this.measureComboBox.IntegralHeight = false;
             this.measureComboBox.Location = new System.Drawing.Point(27, 27);
             this.measureComboBox.Name = "measureComboBox";
-            this.measureComboBox.Size = new System.Drawing.Size(203, 36);
+            this.measureComboBox.Size = new System.Drawing.Size(230, 36);
             this.measureComboBox.TabIndex = 0;
             this.measureComboBox.Text = "마디 번호 선택!";
             this.measureComboBox.SelectedIndexChanged += new System.EventHandler(this.measureComboBox_SelectedIndexChanged);
@@ -747,29 +756,74 @@
             this.measureClusterButton.Text = "자세히 보기!";
             this.measureClusterButton.UseVisualStyleBackColor = true;
             // 
-            // panel3
+            // measurePanel
             // 
-            this.panel3.Controls.Add(this.measureMainLabel);
-            this.panel3.Controls.Add(this.label14);
-            this.panel3.Controls.Add(this.label15);
-            this.panel3.Controls.Add(this.label16);
-            this.panel3.Controls.Add(this.label17);
-            this.panel3.Controls.Add(this.label18);
-            this.panel3.Controls.Add(this.measureOriginalScoreButton);
-            this.panel3.Controls.Add(this.measureMonophonicScoreButton);
-            this.panel3.Controls.Add(this.measureChordButton);
-            this.panel3.Controls.Add(this.measureKeyTextBox);
-            this.panel3.Controls.Add(this.measureTimeTextBox);
-            this.panel3.Controls.Add(this.measureChordTextBox);
-            this.panel3.Controls.Add(this.label19);
-            this.panel3.Controls.Add(this.measureMelodicContourTextBox);
-            this.panel3.Controls.Add(this.measureClusterLabel);
-            this.panel3.Controls.Add(this.measureClusterTextBox);
-            this.panel3.Controls.Add(this.measureClusterButton);
-            this.panel3.Location = new System.Drawing.Point(0, 0);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(556, 541);
-            this.panel3.TabIndex = 28;
+            this.measurePanel.Controls.Add(this.measureMainLabel);
+            this.measurePanel.Controls.Add(this.label14);
+            this.measurePanel.Controls.Add(this.label15);
+            this.measurePanel.Controls.Add(this.label16);
+            this.measurePanel.Controls.Add(this.label17);
+            this.measurePanel.Controls.Add(this.label18);
+            this.measurePanel.Controls.Add(this.measureOriginalScoreButton);
+            this.measurePanel.Controls.Add(this.measureMonophonicScoreButton);
+            this.measurePanel.Controls.Add(this.measureChordButton);
+            this.measurePanel.Controls.Add(this.measureKeyTextBox);
+            this.measurePanel.Controls.Add(this.measureTimeTextBox);
+            this.measurePanel.Controls.Add(this.measureChordTextBox);
+            this.measurePanel.Controls.Add(this.label19);
+            this.measurePanel.Controls.Add(this.measureMelodicContourTextBox);
+            this.measurePanel.Controls.Add(this.measureClusterLabel);
+            this.measurePanel.Controls.Add(this.measureClusterTextBox);
+            this.measurePanel.Controls.Add(this.measureClusterButton);
+            this.measurePanel.Location = new System.Drawing.Point(0, 0);
+            this.measurePanel.Name = "measurePanel";
+            this.measurePanel.Size = new System.Drawing.Size(556, 541);
+            this.measurePanel.TabIndex = 28;
+            // 
+            // clusterComboBox
+            // 
+            this.clusterComboBox.DropDownHeight = 72;
+            this.clusterComboBox.FormattingEnabled = true;
+            this.clusterComboBox.IntegralHeight = false;
+            this.clusterComboBox.Location = new System.Drawing.Point(27, 27);
+            this.clusterComboBox.Name = "clusterComboBox";
+            this.clusterComboBox.Size = new System.Drawing.Size(230, 36);
+            this.clusterComboBox.TabIndex = 1;
+            this.clusterComboBox.Text = "클러스터 번호 선택!";
+            this.clusterComboBox.SelectedIndexChanged += new System.EventHandler(this.clusterComboBox_SelectedIndexChanged);
+            // 
+            // clusterPanel
+            // 
+            this.clusterPanel.Controls.Add(this.clusterTextBox);
+            this.clusterPanel.Location = new System.Drawing.Point(0, 0);
+            this.clusterPanel.Name = "clusterPanel";
+            this.clusterPanel.Size = new System.Drawing.Size(556, 545);
+            this.clusterPanel.TabIndex = 2;
+            // 
+            // clusterMainLabel
+            // 
+            this.clusterMainLabel.AutoSize = true;
+            this.clusterMainLabel.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.clusterMainLabel.ForeColor = System.Drawing.Color.OrangeRed;
+            this.clusterMainLabel.Location = new System.Drawing.Point(21, 85);
+            this.clusterMainLabel.Name = "clusterMainLabel";
+            this.clusterMainLabel.Size = new System.Drawing.Size(452, 32);
+            this.clusterMainLabel.TabIndex = 2;
+            this.clusterMainLabel.Text = "몇 분 정도의 시간이 소요될 수 있습니다.";
+            // 
+            // clusterTextBox
+            // 
+            this.clusterTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.clusterTextBox.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.clusterTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.clusterTextBox.Location = new System.Drawing.Point(14, 138);
+            this.clusterTextBox.Multiline = true;
+            this.clusterTextBox.Name = "clusterTextBox";
+            this.clusterTextBox.ReadOnly = true;
+            this.clusterTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.clusterTextBox.Size = new System.Drawing.Size(528, 388);
+            this.clusterTextBox.TabIndex = 25;
+            this.clusterTextBox.WordWrap = false;
             // 
             // Form1
             // 
@@ -797,8 +851,12 @@
             this.panel2.PerformLayout();
             this.tabControl1.ResumeLayout(false);
             this.measureTabPage.ResumeLayout(false);
-            this.panel3.ResumeLayout(false);
-            this.panel3.PerformLayout();
+            this.clusterTabPage.ResumeLayout(false);
+            this.clusterTabPage.PerformLayout();
+            this.measurePanel.ResumeLayout(false);
+            this.measurePanel.PerformLayout();
+            this.clusterPanel.ResumeLayout(false);
+            this.clusterPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -858,7 +916,11 @@
         private System.Windows.Forms.Label measureClusterLabel;
         private System.Windows.Forms.TextBox measureMelodicContourTextBox;
         private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel measurePanel;
+        private System.Windows.Forms.Panel clusterPanel;
+        private System.Windows.Forms.ComboBox clusterComboBox;
+        private System.Windows.Forms.Label clusterMainLabel;
+        private System.Windows.Forms.TextBox clusterTextBox;
     }
 }
 
