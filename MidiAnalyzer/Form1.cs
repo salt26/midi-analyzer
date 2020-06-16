@@ -40,6 +40,8 @@ namespace MidiAnalyzer
     {
         private const bool RESOLUTION_64 = true;    // 길이의 최소 단위를 false이면 32분음표로, true이면 64분음표로 사용
 
+        public static Form1 form;
+
         private const int DBSCAN_EPSILON = 5;
 
         private const int DBSCAN_MINIMUM_POINTS = 2;
@@ -55,10 +57,16 @@ namespace MidiAnalyzer
         private int pEpsilon = 5;
         private int pMinimumPoints = 2;
 
+        private MidiFile mf = null;
+
         public Form1()
         {
+            if (form == null)
+                form = this;
+            else return;
+
             InitializeComponent();
-            Task.Run(() => { new Test.SFXTest(); });
+            //Task.Run(() => { new Test.SFXTest(); });
         }
 
         private void Form1_Load(object sender, EventArgs eventArgs)
@@ -91,7 +99,21 @@ namespace MidiAnalyzer
             if (filePath == "") return;
 
             bool strictMode = true;
-            MidiFile mf = new MidiFile(filePath, strictMode);
+            try
+            {
+                mf = new MidiFile(filePath, strictMode);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                Invoke(new EventHandler(delegate
+                {
+                    ShowErrorMessage();
+                }));
+
+                return;
+            }
             string fileName = FilePathToName(filePath);
 
             Console.WriteLine("Format {0}, Tracks {1}, Delta Ticks Per Quarter Note {2}",
@@ -377,7 +399,6 @@ namespace MidiAnalyzer
                 track.measureCount = measureCount;
             }
 
-
             #region Recognize chord
 
             for (int m = 0; m < measureCount; m++)
@@ -402,6 +423,11 @@ namespace MidiAnalyzer
             }
 
             #endregion
+
+            Invoke(new EventHandler(delegate
+            {
+                form.ShowTrackMenu();
+            }));
 
             #region DBSCAN clustering for melodic contour
 
@@ -652,6 +678,57 @@ namespace MidiAnalyzer
             }
         }
 
+        private void ShowTrackMenu()
+        {
+            if (tracks == null || tracks.Count == 0 || mf == null) return;
+            fileNameTextBox.Text = "곡: " + FileNameWithoutExtension(FilePathToName(filePath));
+            parameterTextBox.AppendText("유형 " + mf.FileFormat + ", 박자 당 tick 수: " + mf.DeltaTicksPerQuarterNote);
+            parameterTextBox.AppendText(Environment.NewLine);
+            parameterTextBox.AppendText("(" + pDuration + ", " + pOnset + " / " +
+                pPitchVariance + ", " + pPitchRank + ", " + pPitchCount + " / " +
+                pEpsilon + ", " + pMinimumPoints + ")");
+
+            tableLayoutPanel1.RowCount = tracks.Count + 1;
+            for (int i = 0; i < tracks.Count; i++)
+            {
+                var track = tracks[i];
+                tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
+                tableLayoutPanel1.Controls.Add(new Label() { 
+                    Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                    Font = fileNameTextBox.Font,
+                    Size = new Size(144, 47),
+                    Text = "트랙 " + track.trackNum,
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    Visible = true
+                }, 0, i);
+                tableLayoutPanel1.Controls.Add(new Button() {
+                    Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                    Enabled = false,
+                    Font = parameterTextBox.Font,
+                    Size = new Size(142, 41),
+                    Text = "분석 대기 중",
+                    UseVisualStyleBackColor = true,
+                    Visible = true
+                }, 1, i);
+                Console.WriteLine((tableLayoutPanel1.GetControlFromPosition(1, i)).ToString());
+            }
+
+            // 수직 스크롤 바 생겼을 때 수평 스크롤바 없애기
+            int vertScrollWidth = SystemInformation.VerticalScrollBarWidth;
+            tableLayoutPanel1.Padding = new Padding(0, 0, vertScrollWidth, 0);
+
+            tableLayoutPanel1.Visible = true;
+            Console.WriteLine("ShowTrackMenu()");
+        }
+
+        private void ShowErrorMessage()
+        {
+            fileNameTextBox.Text = FileNameWithoutExtension(FilePathToName(filePath));
+            parameterTextBox.AppendText("잘못된 MIDI 파일입니다.");
+            parameterTextBox.AppendText(Environment.NewLine);
+            parameterTextBox.AppendText("종료하고 다시 실행하세요.");
+        }
+
         private void defaultSettingButton_Click(object sender, EventArgs e)
         {
             pDuration = 3;
@@ -711,9 +788,11 @@ namespace MidiAnalyzer
 
         private void analysisStartButton_Click(object sender, EventArgs e)
         {
-            Task.Run(() => Start());
             panel1.Visible = false;
             panel1.Enabled = false;
+            panel2.Enabled = true;
+            panel2.Visible = true;
+            Task.Run(() => Start());
         }
     }
 }
