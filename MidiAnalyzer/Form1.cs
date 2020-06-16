@@ -88,7 +88,7 @@ namespace MidiAnalyzer
                     if (file.Extension.ToLowerInvariant() == ".mid" ||
                         file.Extension.ToLowerInvariant() == ".midi")
                     {
-                        Console.WriteLine(file.Name);
+                        //Console.WriteLine(file.Name);
                         this.filePath = file.FullName;
                         Task.Run(() => Start());
                     }
@@ -118,8 +118,8 @@ namespace MidiAnalyzer
             }
             string fileName = FilePathToName(filePath);
 
-            Console.WriteLine("Format {0}, Tracks {1}, Delta Ticks Per Quarter Note {2}",
-                mf.FileFormat, mf.Tracks, mf.DeltaTicksPerQuarterNote);
+            //Console.WriteLine("Format {0}, Tracks {1}, Delta Ticks Per Quarter Note {2}",
+            //    mf.FileFormat, mf.Tracks, mf.DeltaTicksPerQuarterNote);
 
             #region Time signature preprocessing
 
@@ -332,7 +332,7 @@ namespace MidiAnalyzer
                     measureCount = measureNum;
                 }
 
-                Console.WriteLine(track.songName + ": track " + track.trackNum);
+                //Console.WriteLine(track.songName + ": track " + track.trackNum);
                 /*
                 foreach (Note note in track.score)
                 {
@@ -422,8 +422,8 @@ namespace MidiAnalyzer
                     track.measures[m].chord = chord;
                 }
 
-                if (chord.type != Chord.Type.NULL)
-                    Console.WriteLine("chord of measure " + (m + 1) + ": " + chord.ToString());
+                //if (chord.type != Chord.Type.NULL)
+                //    Console.WriteLine("chord of measure " + (m + 1) + ": " + chord.ToString());
             }
 
             #endregion
@@ -444,8 +444,8 @@ namespace MidiAnalyzer
                     form.AfterStartClustering(n);
                 }));
 
-                Console.WriteLine();
-                Console.WriteLine(track.songName + ": track " + track.trackNum);
+                //Console.WriteLine();
+                //Console.WriteLine(track.songName + ": track " + track.trackNum);
 
                 List<KeyValuePair<int, MelodicContour>> melodicContourData = new List<KeyValuePair<int, MelodicContour>>();
 
@@ -466,7 +466,7 @@ namespace MidiAnalyzer
 
                 foreach (var p in result.Clusters)
                 {
-                    Console.WriteLine("Cluster " + p.Key);
+                    //Console.WriteLine("Cluster " + p.Key);
 
                     string clusterOutput = "";
                     if (p.Value.Count() > 0)
@@ -502,11 +502,11 @@ namespace MidiAnalyzer
                     }
                     track.clusterIDs.Add(p.Key);
                     track.clusterOutputs[p.Key] = clusterOutput;
-                    Console.WriteLine(clusterOutput);
+                    //Console.WriteLine(clusterOutput);
                     //Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
                 }
 
-                Console.WriteLine("Noise");
+                //Console.WriteLine("Noise");
                 int uniqueID = -1 * (result.Clusters.Count + 1);
                 string clusterOutput2 = "";
 
@@ -543,30 +543,30 @@ namespace MidiAnalyzer
                 }
                 track.clusterIDs.Add(0);
                 track.clusterOutputs[0] = clusterOutput2;
-                Console.WriteLine(clusterOutput2);
+                //Console.WriteLine(clusterOutput2);
 
                 track.clusterIDs.Sort();
 
-                Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
+                //Console.WriteLine("~~~~~~~~~~~~~~~~~~~~~~~~");
 
                 List<int> melodicContourSequence = new List<int>();
                 foreach (Measure m in track.measures)
                 {
-                    Console.Write(m.melodicContourID + " ");
+                    //Console.Write(m.melodicContourID + " ");
                     melodicContourSequence.Add(m.melodicContourID);
                 }
 
-                Console.WriteLine();
+                //Console.WriteLine();
 
-                Console.WriteLine("Repeated Melodic Contour ID Sequences with 4 or more length");
+                //Console.WriteLine("Repeated Melodic Contour ID Sequences with 4 or more length");
                 track.repeatedMelodicContourSequences = LongestRepeatedSubstrings(melodicContourSequence, 4);
                 foreach (KeyValuePair<int, List<int>> s in track.repeatedMelodicContourSequences)
                 {
                     for (int i = 0; i < s.Value.Count; i++)
                     {
-                        Console.Write(s.Value[i] + " ");
+                        //Console.Write(s.Value[i] + " ");
                     }
-                    Console.WriteLine();
+                    //Console.WriteLine();
                 }
 
                 track.status = TrackInfo.AnalysisStatus.Complete;
@@ -578,7 +578,7 @@ namespace MidiAnalyzer
 
             #endregion
 
-            Console.WriteLine("Analysis terminated.");
+            //Console.WriteLine("Analysis terminated.");
 
         }
 
@@ -770,7 +770,6 @@ namespace MidiAnalyzer
 
             tableLayoutPanel1.Visible = true;
             //tabControl1.Visible = true;
-            Console.WriteLine("ShowTrackMenu()");
         }
 
         private void ShowErrorMessage()
@@ -804,9 +803,22 @@ namespace MidiAnalyzer
                         measureClusterTextBox.Text = measure.melodicContourID.ToString();
                         measureClusterTextBox.Enabled = true;
                         measureClusterLabel.Enabled = true;
-                        measureClusterButton.Enabled = true;
-                        int i = measureComboBox.SelectedIndex;
-                        measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
+                        if (measure.melodicContourID != 0)
+                        {
+                            measureClusterButton.Enabled = true;
+                            int i = measureComboBox.SelectedIndex;
+                            measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
+                        }
+                        else
+                        {
+                            RemoveClickEvent(measureClusterButton);
+                            measureClusterButton.Enabled = false;
+                        }
+                    }
+                    else
+                    {
+                        RemoveClickEvent(measureClusterButton);
+                        measureClusterButton.Enabled = false;
                     }
                 }
 
@@ -918,9 +930,33 @@ namespace MidiAnalyzer
             {
                 (tabControl1.TabPages[1] as TabPage).Enabled = true;
                 (tabControl1.TabPages[2] as TabPage).Enabled = true;
-                measureClusterTextBox.Enabled = true;
-                measureClusterLabel.Enabled = true;
-                measureClusterButton.Enabled = true;
+
+                if (measureComboBox.SelectedItem != null)
+                {
+                    Measure measure = tracks[seletedTrackIndex].measures[measureComboBox.SelectedIndex];
+                    if (measure != null)
+                    {
+                        measureClusterTextBox.Text = measure.melodicContourID.ToString();
+                        measureClusterTextBox.Enabled = true;
+                        measureClusterLabel.Enabled = true;
+                        if (measure.melodicContourID != 0)
+                        {
+                            measureClusterButton.Enabled = true;
+                            int i = measureComboBox.SelectedIndex;
+                            measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
+                        }
+                        else
+                        {
+                            RemoveClickEvent(measureClusterButton);
+                            measureClusterButton.Enabled = false;
+                        }
+                    }
+                    else
+                    {
+                        RemoveClickEvent(measureClusterButton);
+                        measureClusterButton.Enabled = false;
+                    }
+                }
 
 
                 clusterComboBox.Items.Add("단독 클러스터");
@@ -1105,13 +1141,20 @@ namespace MidiAnalyzer
                 measureClusterTextBox.Text = measure.melodicContourID.ToString();
                 measureClusterTextBox.Enabled = true;
                 measureClusterLabel.Enabled = true;
-                measureClusterButton.Enabled = true;
-                int i = measureComboBox.SelectedIndex;
-                measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
+                if (measure.melodicContourID != 0)
+                {
+                    measureClusterButton.Enabled = true;
+                    int i = measureComboBox.SelectedIndex;
+                    measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
+                }
+                else
+                {
+                    measureClusterButton.Enabled = false;
+                }
             }
             else
             {
-                measureClusterTextBox.Text = "...";
+                measureClusterTextBox.Text = "?";
                 measureClusterTextBox.Enabled = false;
                 measureClusterLabel.Enabled = false;
                 measureClusterButton.Enabled = false;
@@ -1199,7 +1242,29 @@ namespace MidiAnalyzer
 
         private void measureClusterButton_Click(object sender, EventArgs e, int measureIndex)
         {
-            //asdf;
+            if (tracks == null || seletedTrackIndex < 0 ||
+                seletedTrackIndex >= tracks.Count ||
+                measureIndex >= tracks[seletedTrackIndex].measures.Count ||
+                tracks[seletedTrackIndex].status != TrackInfo.AnalysisStatus.Complete)
+                return;
+
+            int melodicContourID = tracks[seletedTrackIndex].measures[measureIndex].melodicContourID;
+            int index = -1;
+            if (melodicContourID < 0)
+            {
+                index = 0;
+            }
+            else if (melodicContourID > 0)
+            {
+                index = tracks[seletedTrackIndex].clusterIDs.IndexOf(melodicContourID);
+            }
+            else
+            {
+                return;
+            }
+
+            tabControl1.SelectTab(1);
+            clusterComboBox.SelectedIndex = index;
         }
 
         private void clusterComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -1258,7 +1323,7 @@ namespace MidiAnalyzer
                 {
                     Measure measure = tracks[seletedTrackIndex].measures.Find(el => el.measureNum == tracks[seletedTrackIndex].representatives[melodicContourID].Key);
                     if (measure == null) continue;
-                    mc = mc.Concatenate(measure.melodicContourWithAbsolutePitch);
+                    mc = mc.Concatenate(measure.melodicContour);
                 }
                 else
                 {

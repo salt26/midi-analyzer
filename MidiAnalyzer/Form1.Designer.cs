@@ -122,7 +122,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("맑은 고딕", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label1.Location = new System.Drawing.Point(53, 43);
+            this.label1.Location = new System.Drawing.Point(53, 46);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(145, 38);
             this.label1.TabIndex = 0;
@@ -174,10 +174,10 @@
             // 
             this.label12.AutoSize = true;
             this.label12.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label12.Font = new System.Drawing.Font("맑은 고딕", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label12.Font = new System.Drawing.Font("나눔손글씨 중학생", 22.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.label12.Location = new System.Drawing.Point(53, 539);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(241, 40);
+            this.label12.Size = new System.Drawing.Size(202, 46);
             this.label12.TabIndex = 23;
             this.label12.Text = "MIDI 분석기 v.1.0";
             // 
@@ -185,7 +185,7 @@
             // 
             this.linkLabel1.AutoSize = true;
             this.linkLabel1.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.linkLabel1.Location = new System.Drawing.Point(349, 544);
+            this.linkLabel1.Location = new System.Drawing.Point(349, 545);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(91, 32);
             this.linkLabel1.TabIndex = 22;
@@ -213,7 +213,7 @@
             this.defaultSettingButton.Name = "defaultSettingButton";
             this.defaultSettingButton.Size = new System.Drawing.Size(129, 379);
             this.defaultSettingButton.TabIndex = 20;
-            this.defaultSettingButton.Text = "기본값 설정";
+            this.defaultSettingButton.Text = "설정\r\n초기화";
             this.defaultSettingButton.UseVisualStyleBackColor = true;
             this.defaultSettingButton.Click += new System.EventHandler(this.defaultSettingButton_Click);
             // 
@@ -417,7 +417,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("맑은 고딕", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label4.Location = new System.Drawing.Point(53, 403);
+            this.label4.Location = new System.Drawing.Point(53, 406);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(157, 38);
             this.label4.TabIndex = 4;
@@ -427,7 +427,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("맑은 고딕", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label3.Location = new System.Drawing.Point(53, 233);
+            this.label3.Location = new System.Drawing.Point(53, 236);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(111, 38);
             this.label3.TabIndex = 3;
@@ -437,7 +437,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("맑은 고딕", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label2.Location = new System.Drawing.Point(53, 113);
+            this.label2.Location = new System.Drawing.Point(53, 116);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(73, 38);
             this.label2.TabIndex = 2;
@@ -553,10 +553,10 @@
             // 
             this.label13.AutoSize = true;
             this.label13.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label13.Font = new System.Drawing.Font("맑은 고딕", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label13.Font = new System.Drawing.Font("나눔손글씨 중학생", 22.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.label13.Location = new System.Drawing.Point(53, 539);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(241, 40);
+            this.label13.Size = new System.Drawing.Size(202, 46);
             this.label13.TabIndex = 24;
             this.label13.Text = "MIDI 분석기 v.1.0";
             // 
@@ -686,7 +686,7 @@
             this.measureKeyTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
             this.measureKeyTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.measureKeyTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.measureKeyTextBox.Location = new System.Drawing.Point(110, 195);
+            this.measureKeyTextBox.Location = new System.Drawing.Point(110, 194);
             this.measureKeyTextBox.Name = "measureKeyTextBox";
             this.measureKeyTextBox.ReadOnly = true;
             this.measureKeyTextBox.Size = new System.Drawing.Size(167, 34);
@@ -698,7 +698,7 @@
             this.measureTimeTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
             this.measureTimeTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.measureTimeTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.measureTimeTextBox.Location = new System.Drawing.Point(110, 145);
+            this.measureTimeTextBox.Location = new System.Drawing.Point(110, 144);
             this.measureTimeTextBox.Name = "measureTimeTextBox";
             this.measureTimeTextBox.ReadOnly = true;
             this.measureTimeTextBox.Size = new System.Drawing.Size(167, 34);
@@ -710,7 +710,7 @@
             this.measureChordTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
             this.measureChordTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.measureChordTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.measureChordTextBox.Location = new System.Drawing.Point(110, 245);
+            this.measureChordTextBox.Location = new System.Drawing.Point(110, 244);
             this.measureChordTextBox.Name = "measureChordTextBox";
             this.measureChordTextBox.ReadOnly = true;
             this.measureChordTextBox.Size = new System.Drawing.Size(306, 34);
@@ -756,12 +756,12 @@
             this.measureClusterTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
             this.measureClusterTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.measureClusterTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.measureClusterTextBox.Location = new System.Drawing.Point(276, 490);
+            this.measureClusterTextBox.Location = new System.Drawing.Point(276, 489);
             this.measureClusterTextBox.Name = "measureClusterTextBox";
             this.measureClusterTextBox.ReadOnly = true;
             this.measureClusterTextBox.Size = new System.Drawing.Size(63, 34);
             this.measureClusterTextBox.TabIndex = 26;
-            this.measureClusterTextBox.Text = "...";
+            this.measureClusterTextBox.Text = "?";
             this.measureClusterTextBox.WordWrap = false;
             // 
             // measureClusterButton
@@ -942,8 +942,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(914, 641);
-            this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
+            this.Controls.Add(this.panel2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
