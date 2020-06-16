@@ -56,12 +56,32 @@
             this.label2 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.measureTabPage = new System.Windows.Forms.TabPage();
+            this.clusterTabPage = new System.Windows.Forms.TabPage();
             this.fileNameTextBox = new System.Windows.Forms.TextBox();
             this.parameterTextBox = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label13 = new System.Windows.Forms.Label();
+            this.structureTabPage = new System.Windows.Forms.TabPage();
+            this.measureComboBox = new System.Windows.Forms.ComboBox();
+            this.measureMainLabel = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.measureOriginalScoreButton = new System.Windows.Forms.Button();
+            this.measureMonophonicScoreButton = new System.Windows.Forms.Button();
+            this.measureChordButton = new System.Windows.Forms.Button();
+            this.measureKeyTextBox = new System.Windows.Forms.TextBox();
+            this.measureTimeTextBox = new System.Windows.Forms.TextBox();
+            this.measureChordTextBox = new System.Windows.Forms.TextBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.measureMelodicContourTextBox = new System.Windows.Forms.TextBox();
+            this.measureClusterLabel = new System.Windows.Forms.Label();
+            this.measureClusterTextBox = new System.Windows.Forms.TextBox();
+            this.measureClusterButton = new System.Windows.Forms.Button();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericMinimumPoints)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericEpsilon)).BeginInit();
@@ -72,6 +92,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericDuration)).BeginInit();
             this.panel2.SuspendLayout();
             this.tabControl1.SuspendLayout();
+            this.measureTabPage.SuspendLayout();
+            this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
@@ -160,6 +182,7 @@
             // 
             this.analysisStartButton.Enabled = false;
             this.analysisStartButton.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.analysisStartButton.ForeColor = System.Drawing.Color.OrangeRed;
             this.analysisStartButton.Location = new System.Drawing.Point(633, 518);
             this.analysisStartButton.Name = "analysisStartButton";
             this.analysisStartButton.Size = new System.Drawing.Size(215, 83);
@@ -184,6 +207,7 @@
             this.fileTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
             this.fileTextBox.Enabled = false;
             this.fileTextBox.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.fileTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.fileTextBox.Location = new System.Drawing.Point(232, 48);
             this.fileTextBox.Name = "fileTextBox";
             this.fileTextBox.ReadOnly = true;
@@ -420,33 +444,38 @@
             // 
             // tabControl1
             // 
-            this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Controls.Add(this.measureTabPage);
+            this.tabControl1.Controls.Add(this.clusterTabPage);
+            this.tabControl1.Controls.Add(this.structureTabPage);
+            this.tabControl1.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.tabControl1.Location = new System.Drawing.Point(338, 28);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(544, 582);
+            this.tabControl1.Size = new System.Drawing.Size(564, 582);
             this.tabControl1.TabIndex = 0;
+            this.tabControl1.Visible = false;
             // 
-            // tabPage1
+            // measureTabPage
             // 
-            this.tabPage1.Location = new System.Drawing.Point(4, 25);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(536, 553);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "tabPage1";
-            this.tabPage1.UseVisualStyleBackColor = true;
+            this.measureTabPage.BackColor = System.Drawing.SystemColors.Control;
+            this.measureTabPage.Controls.Add(this.measureComboBox);
+            this.measureTabPage.Controls.Add(this.panel3);
+            this.measureTabPage.Location = new System.Drawing.Point(4, 37);
+            this.measureTabPage.Name = "measureTabPage";
+            this.measureTabPage.Padding = new System.Windows.Forms.Padding(3);
+            this.measureTabPage.Size = new System.Drawing.Size(556, 541);
+            this.measureTabPage.TabIndex = 0;
+            this.measureTabPage.Text = "마디 정보";
             // 
-            // tabPage2
+            // clusterTabPage
             // 
-            this.tabPage2.Location = new System.Drawing.Point(4, 25);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(519, 517);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "tabPage2";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.clusterTabPage.BackColor = System.Drawing.SystemColors.Control;
+            this.clusterTabPage.Location = new System.Drawing.Point(4, 37);
+            this.clusterTabPage.Name = "clusterTabPage";
+            this.clusterTabPage.Padding = new System.Windows.Forms.Padding(3);
+            this.clusterTabPage.Size = new System.Drawing.Size(556, 541);
+            this.clusterTabPage.TabIndex = 1;
+            this.clusterTabPage.Text = "멜로디 형태 클러스터 정보";
             // 
             // fileNameTextBox
             // 
@@ -513,6 +542,235 @@
             this.label13.TabIndex = 24;
             this.label13.Text = "MIDI 분석기 v.1.0";
             // 
+            // structureTabPage
+            // 
+            this.structureTabPage.BackColor = System.Drawing.SystemColors.Control;
+            this.structureTabPage.Location = new System.Drawing.Point(4, 37);
+            this.structureTabPage.Name = "structureTabPage";
+            this.structureTabPage.Size = new System.Drawing.Size(536, 541);
+            this.structureTabPage.TabIndex = 2;
+            this.structureTabPage.Text = "곡의 구조 정보";
+            // 
+            // measureComboBox
+            // 
+            this.measureComboBox.DropDownHeight = 72;
+            this.measureComboBox.FormattingEnabled = true;
+            this.measureComboBox.IntegralHeight = false;
+            this.measureComboBox.Location = new System.Drawing.Point(27, 27);
+            this.measureComboBox.Name = "measureComboBox";
+            this.measureComboBox.Size = new System.Drawing.Size(203, 36);
+            this.measureComboBox.TabIndex = 0;
+            this.measureComboBox.Text = "마디 번호 선택!";
+            this.measureComboBox.SelectedIndexChanged += new System.EventHandler(this.measureComboBox_SelectedIndexChanged);
+            // 
+            // measureMainLabel
+            // 
+            this.measureMainLabel.AutoSize = true;
+            this.measureMainLabel.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.measureMainLabel.ForeColor = System.Drawing.Color.OrangeRed;
+            this.measureMainLabel.Location = new System.Drawing.Point(21, 85);
+            this.measureMainLabel.Name = "measureMainLabel";
+            this.measureMainLabel.Size = new System.Drawing.Size(201, 32);
+            this.measureMainLabel.TabIndex = 1;
+            this.measureMainLabel.Text = "곡 > 트랙 > 마디";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label14.Location = new System.Drawing.Point(21, 195);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(63, 32);
+            this.label14.TabIndex = 2;
+            this.label14.Text = "조표";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label15.Location = new System.Drawing.Point(21, 145);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(87, 32);
+            this.label15.TabIndex = 3;
+            this.label15.Text = "박자표";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label16.Location = new System.Drawing.Point(288, 145);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(119, 32);
+            this.label16.TabIndex = 4;
+            this.label16.Text = "원곡 악보";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label17.Location = new System.Drawing.Point(288, 195);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(143, 32);
+            this.label17.TabIndex = 5;
+            this.label17.Text = "멜로디 악보";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label18.Location = new System.Drawing.Point(21, 245);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(63, 32);
+            this.label18.TabIndex = 6;
+            this.label18.Text = "화음";
+            // 
+            // measureOriginalScoreButton
+            // 
+            this.measureOriginalScoreButton.Enabled = false;
+            this.measureOriginalScoreButton.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.measureOriginalScoreButton.Location = new System.Drawing.Point(433, 143);
+            this.measureOriginalScoreButton.Name = "measureOriginalScoreButton";
+            this.measureOriginalScoreButton.Size = new System.Drawing.Size(91, 38);
+            this.measureOriginalScoreButton.TabIndex = 10;
+            this.measureOriginalScoreButton.Text = "듣기!";
+            this.measureOriginalScoreButton.UseVisualStyleBackColor = true;
+            // 
+            // measureMonophonicScoreButton
+            // 
+            this.measureMonophonicScoreButton.Enabled = false;
+            this.measureMonophonicScoreButton.Location = new System.Drawing.Point(433, 193);
+            this.measureMonophonicScoreButton.Name = "measureMonophonicScoreButton";
+            this.measureMonophonicScoreButton.Size = new System.Drawing.Size(91, 38);
+            this.measureMonophonicScoreButton.TabIndex = 11;
+            this.measureMonophonicScoreButton.Text = "듣기!";
+            this.measureMonophonicScoreButton.UseVisualStyleBackColor = true;
+            // 
+            // measureChordButton
+            // 
+            this.measureChordButton.Enabled = false;
+            this.measureChordButton.Location = new System.Drawing.Point(433, 243);
+            this.measureChordButton.Name = "measureChordButton";
+            this.measureChordButton.Size = new System.Drawing.Size(91, 38);
+            this.measureChordButton.TabIndex = 12;
+            this.measureChordButton.Text = "듣기!";
+            this.measureChordButton.UseVisualStyleBackColor = true;
+            // 
+            // measureKeyTextBox
+            // 
+            this.measureKeyTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.measureKeyTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.measureKeyTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.measureKeyTextBox.Location = new System.Drawing.Point(110, 195);
+            this.measureKeyTextBox.Name = "measureKeyTextBox";
+            this.measureKeyTextBox.ReadOnly = true;
+            this.measureKeyTextBox.Size = new System.Drawing.Size(167, 34);
+            this.measureKeyTextBox.TabIndex = 20;
+            this.measureKeyTextBox.WordWrap = false;
+            // 
+            // measureTimeTextBox
+            // 
+            this.measureTimeTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.measureTimeTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.measureTimeTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.measureTimeTextBox.Location = new System.Drawing.Point(110, 145);
+            this.measureTimeTextBox.Name = "measureTimeTextBox";
+            this.measureTimeTextBox.ReadOnly = true;
+            this.measureTimeTextBox.Size = new System.Drawing.Size(167, 34);
+            this.measureTimeTextBox.TabIndex = 21;
+            this.measureTimeTextBox.WordWrap = false;
+            // 
+            // measureChordTextBox
+            // 
+            this.measureChordTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.measureChordTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.measureChordTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.measureChordTextBox.Location = new System.Drawing.Point(110, 245);
+            this.measureChordTextBox.Name = "measureChordTextBox";
+            this.measureChordTextBox.ReadOnly = true;
+            this.measureChordTextBox.Size = new System.Drawing.Size(306, 34);
+            this.measureChordTextBox.TabIndex = 22;
+            this.measureChordTextBox.WordWrap = false;
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label19.Location = new System.Drawing.Point(21, 295);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(143, 32);
+            this.label19.TabIndex = 23;
+            this.label19.Text = "멜로디 형태";
+            // 
+            // measureMelodicContourTextBox
+            // 
+            this.measureMelodicContourTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.measureMelodicContourTextBox.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.measureMelodicContourTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.measureMelodicContourTextBox.Location = new System.Drawing.Point(13, 338);
+            this.measureMelodicContourTextBox.Multiline = true;
+            this.measureMelodicContourTextBox.Name = "measureMelodicContourTextBox";
+            this.measureMelodicContourTextBox.ReadOnly = true;
+            this.measureMelodicContourTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.measureMelodicContourTextBox.Size = new System.Drawing.Size(528, 138);
+            this.measureMelodicContourTextBox.TabIndex = 24;
+            this.measureMelodicContourTextBox.WordWrap = false;
+            // 
+            // measureClusterLabel
+            // 
+            this.measureClusterLabel.AutoSize = true;
+            this.measureClusterLabel.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.measureClusterLabel.Location = new System.Drawing.Point(23, 490);
+            this.measureClusterLabel.Name = "measureClusterLabel";
+            this.measureClusterLabel.Size = new System.Drawing.Size(247, 32);
+            this.measureClusterLabel.TabIndex = 25;
+            this.measureClusterLabel.Text = "멜로디 형태 클러스터";
+            // 
+            // measureClusterTextBox
+            // 
+            this.measureClusterTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.measureClusterTextBox.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.measureClusterTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.measureClusterTextBox.Location = new System.Drawing.Point(276, 490);
+            this.measureClusterTextBox.Name = "measureClusterTextBox";
+            this.measureClusterTextBox.ReadOnly = true;
+            this.measureClusterTextBox.Size = new System.Drawing.Size(63, 34);
+            this.measureClusterTextBox.TabIndex = 26;
+            this.measureClusterTextBox.Text = "...";
+            this.measureClusterTextBox.WordWrap = false;
+            // 
+            // measureClusterButton
+            // 
+            this.measureClusterButton.Location = new System.Drawing.Point(357, 488);
+            this.measureClusterButton.Name = "measureClusterButton";
+            this.measureClusterButton.Size = new System.Drawing.Size(167, 38);
+            this.measureClusterButton.TabIndex = 27;
+            this.measureClusterButton.Text = "자세히 보기!";
+            this.measureClusterButton.UseVisualStyleBackColor = true;
+            // 
+            // panel3
+            // 
+            this.panel3.Controls.Add(this.measureMainLabel);
+            this.panel3.Controls.Add(this.label14);
+            this.panel3.Controls.Add(this.label15);
+            this.panel3.Controls.Add(this.label16);
+            this.panel3.Controls.Add(this.label17);
+            this.panel3.Controls.Add(this.label18);
+            this.panel3.Controls.Add(this.measureOriginalScoreButton);
+            this.panel3.Controls.Add(this.measureMonophonicScoreButton);
+            this.panel3.Controls.Add(this.measureChordButton);
+            this.panel3.Controls.Add(this.measureKeyTextBox);
+            this.panel3.Controls.Add(this.measureTimeTextBox);
+            this.panel3.Controls.Add(this.measureChordTextBox);
+            this.panel3.Controls.Add(this.label19);
+            this.panel3.Controls.Add(this.measureMelodicContourTextBox);
+            this.panel3.Controls.Add(this.measureClusterLabel);
+            this.panel3.Controls.Add(this.measureClusterTextBox);
+            this.panel3.Controls.Add(this.measureClusterButton);
+            this.panel3.Location = new System.Drawing.Point(0, 0);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(556, 541);
+            this.panel3.TabIndex = 28;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -538,6 +796,9 @@
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.tabControl1.ResumeLayout(false);
+            this.measureTabPage.ResumeLayout(false);
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -574,10 +835,30 @@
         private System.Windows.Forms.TextBox parameterTextBox;
         private System.Windows.Forms.TextBox fileNameTextBox;
         private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.TabPage measureTabPage;
+        private System.Windows.Forms.TabPage clusterTabPage;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label measureMainLabel;
+        private System.Windows.Forms.ComboBox measureComboBox;
+        private System.Windows.Forms.TabPage structureTabPage;
+        private System.Windows.Forms.TextBox measureChordTextBox;
+        private System.Windows.Forms.TextBox measureTimeTextBox;
+        private System.Windows.Forms.TextBox measureKeyTextBox;
+        private System.Windows.Forms.Button measureChordButton;
+        private System.Windows.Forms.Button measureMonophonicScoreButton;
+        private System.Windows.Forms.Button measureOriginalScoreButton;
+        private System.Windows.Forms.Button measureClusterButton;
+        private System.Windows.Forms.TextBox measureClusterTextBox;
+        private System.Windows.Forms.Label measureClusterLabel;
+        private System.Windows.Forms.TextBox measureMelodicContourTextBox;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Panel panel3;
     }
 }
 

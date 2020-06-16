@@ -29,6 +29,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NAudio.Midi;
@@ -58,6 +59,7 @@ namespace MidiAnalyzer
         private int pMinimumPoints = 2;
 
         private MidiFile mf = null;
+        private int seletedTrackIndex = -1;
 
         public Form1()
         {
@@ -419,7 +421,7 @@ namespace MidiAnalyzer
                 }
 
                 if (chord.type != Chord.Type.NULL)
-                    Console.WriteLine("chord of measure " + (m + 1) + ": " + chord.root + chord.type);
+                    Console.WriteLine("chord of measure " + (m + 1) + ": " + chord.ToString());
             }
 
             #endregion
@@ -434,6 +436,11 @@ namespace MidiAnalyzer
             for (int n = 0; n < tracks.Count; n++)
             {
                 TrackInfo track = tracks[n];
+                track.status = TrackInfo.AnalysisStatus.Analyzing;
+                Invoke(new EventHandler(delegate
+                {
+                    form.AfterStartClustering(n);
+                }));
 
                 Console.WriteLine();
                 Console.WriteLine(track.songName + ": track " + track.trackNum);
@@ -537,6 +544,12 @@ namespace MidiAnalyzer
                     }
                     Console.WriteLine();
                 }
+
+                track.status = TrackInfo.AnalysisStatus.Complete;
+                Invoke(new EventHandler(delegate
+                {
+                    form.AfterFinishClustering(n);
+                }));
             }
 
             #endregion
@@ -688,7 +701,14 @@ namespace MidiAnalyzer
                 pPitchVariance + ", " + pPitchRank + ", " + pPitchCount + " / " +
                 pEpsilon + ", " + pMinimumPoints + ")");
 
-            tableLayoutPanel1.RowCount = tracks.Count + 1;
+            if (tracks.Count > 7)
+            {
+                tableLayoutPanel1.RowCount = tracks.Count;
+            }
+            else
+            {
+                tableLayoutPanel1.RowCount = tracks.Count + 1;
+            }
             for (int i = 0; i < tracks.Count; i++)
             {
                 var track = tracks[i];
@@ -699,18 +719,25 @@ namespace MidiAnalyzer
                     Size = new Size(144, 47),
                     Text = "트랙 " + track.trackNum,
                     TextAlign = ContentAlignment.MiddleLeft,
-                    Visible = true
+                    Visible = true,
+                    ForeColor = SystemColors.WindowText
                 }, 0, i);
-                tableLayoutPanel1.Controls.Add(new Button() {
+
+                // trackExploreButton
+                Button trackExploreButton = new Button()
+                {
                     Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
-                    Enabled = false,
+                    Enabled = true,
                     Font = parameterTextBox.Font,
                     Size = new Size(142, 41),
                     Text = "분석 대기 중",
                     UseVisualStyleBackColor = true,
                     Visible = true
-                }, 1, i);
-                Console.WriteLine((tableLayoutPanel1.GetControlFromPosition(1, i)).ToString());
+                };
+                tableLayoutPanel1.Controls.Add(trackExploreButton, 1, i);
+                int j = i;
+                trackExploreButton.Click += (object sender, EventArgs e) => { trackExploreButton_Click(sender, e, j); };
+                //Console.WriteLine((tableLayoutPanel1.GetControlFromPosition(1, i)).ToString());
             }
 
             // 수직 스크롤 바 생겼을 때 수평 스크롤바 없애기
@@ -718,6 +745,7 @@ namespace MidiAnalyzer
             tableLayoutPanel1.Padding = new Padding(0, 0, vertScrollWidth, 0);
 
             tableLayoutPanel1.Visible = true;
+            //tabControl1.Visible = true;
             Console.WriteLine("ShowTrackMenu()");
         }
 
@@ -727,6 +755,88 @@ namespace MidiAnalyzer
             parameterTextBox.AppendText("잘못된 MIDI 파일입니다.");
             parameterTextBox.AppendText(Environment.NewLine);
             parameterTextBox.AppendText("종료하고 다시 실행하세요.");
+        }
+
+        private void AfterStartClustering(int trackIndex)
+        {
+            tableLayoutPanel1.GetControlFromPosition(1, trackIndex).Text = "분석 중...";
+            
+        }
+
+        private void AfterFinishClustering(int trackIndex)
+        {
+            tableLayoutPanel1.GetControlFromPosition(1, trackIndex).Text = "살펴보기!";
+
+            if (seletedTrackIndex >= 0 && seletedTrackIndex == trackIndex)
+            {
+                if (tabControl1.SelectedIndex == 0)
+                {
+                    // 마디 정보 탭
+                    (tabControl1.TabPages[1] as TabPage).Enabled = true;
+                    (tabControl1.TabPages[2] as TabPage).Enabled = true;
+
+                    if (measureComboBox.SelectedItem != null)
+                    {
+                        Measure measure = tracks[seletedTrackIndex].measures[measureComboBox.SelectedIndex];
+                        if (measure != null)
+                        {
+                            measureClusterTextBox.Text = measure.melodicContourID.ToString();
+                            measureClusterTextBox.Enabled = true;
+                            measureClusterLabel.Enabled = true;
+                            measureClusterButton.Enabled = true;
+                            int i = measureComboBox.SelectedIndex;
+                            measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
+                        }
+                    }
+                }
+            }
+        }
+
+        private void trackExploreButton_Click(object sender, EventArgs e, int trackIndex)
+        {
+            TrackInfo track = tracks[trackIndex];
+
+            tabControl1.SelectTab(0);
+
+            measureTimeTextBox.Text = "";
+            measureKeyTextBox.Text = "";
+            measureChordTextBox.Text = "";
+            measureMelodicContourTextBox.Text = "";
+            measureClusterTextBox.Text = "";
+            measureComboBox.Text = "마디 번호 선택!";
+            panel3.Visible = false;
+
+            seletedTrackIndex = trackIndex;
+
+            measureComboBox.Items.Clear();
+
+            for (int i = 0; i < track.measures.Count; i++)
+            {
+                measureComboBox.Items.Add(track.measures[i].measureNum + "번 마디");
+            }
+            for (int i = 0; i < tracks.Count; i++)
+            {
+                if (i == trackIndex) continue;
+                tableLayoutPanel1.GetControlFromPosition(1, i).Enabled = true;
+                tableLayoutPanel1.GetControlFromPosition(0, i).ForeColor = SystemColors.WindowText;
+            }
+            tableLayoutPanel1.GetControlFromPosition(1, trackIndex).Enabled = false;
+            tableLayoutPanel1.GetControlFromPosition(0, trackIndex).ForeColor = Color.OrangeRed;
+
+            if (track.status == TrackInfo.AnalysisStatus.Complete)
+            {
+                (tabControl1.TabPages[1] as TabPage).Enabled = true;
+                (tabControl1.TabPages[2] as TabPage).Enabled = true;
+                measureClusterButton.Enabled = true;
+            }
+            else
+            {
+                (tabControl1.TabPages[1] as TabPage).Enabled = false;
+                (tabControl1.TabPages[2] as TabPage).Enabled = false;
+                measureClusterButton.Enabled = false;
+            }
+
+            tabControl1.Visible = true;
         }
 
         private void defaultSettingButton_Click(object sender, EventArgs e)
@@ -793,6 +903,152 @@ namespace MidiAnalyzer
             panel2.Enabled = true;
             panel2.Visible = true;
             Task.Run(() => Start());
+        }
+
+        private void measureComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tracks == null || seletedTrackIndex < 0 ||
+                seletedTrackIndex >= tracks.Count ||
+                measureComboBox.SelectedIndex >= tracks[seletedTrackIndex].measures.Count)
+                return;
+            
+            Measure measure = tracks[seletedTrackIndex].measures[measureComboBox.SelectedIndex];
+            if (measure == null) return;
+
+            measureMainLabel.Text = measure.songName + " > 트랙 " + measure.trackNum + " > " + measure.measureNum + "번 마디";
+            measureTimeTextBox.Text = measure.timeSignature.Key + "/" + measure.timeSignature.Value;
+            measureChordTextBox.Text = measure.chord.ToString();
+            measureMelodicContourTextBox.Clear();
+            foreach (string token in measure.melodicContourOutput.TrimEnd('\n').Split('\n'))
+            {
+                measureMelodicContourTextBox.AppendText(token);
+                measureMelodicContourTextBox.AppendText(Environment.NewLine);
+            }
+
+            // 커서가 텍스트의 시작 위치에 놓이도록 함
+            measureMelodicContourTextBox.Focus();
+            measureMelodicContourTextBox.SelectionStart = 0;
+            measureMelodicContourTextBox.SelectionLength = 0;
+            measureMelodicContourTextBox.ScrollToCaret();
+
+            RemoveClickEvent(measureClusterButton);
+            RemoveClickEvent(measureOriginalScoreButton);
+            RemoveClickEvent(measureMonophonicScoreButton);
+            RemoveClickEvent(measureChordButton);
+            // TODO 듣기! 버튼의 이벤트를 만들어야 한다.
+
+            if (tracks[seletedTrackIndex].status == TrackInfo.AnalysisStatus.Complete)
+            {
+                measureClusterTextBox.Text = measure.melodicContourID.ToString();
+                measureClusterTextBox.Enabled = true;
+                measureClusterLabel.Enabled = true;
+                measureClusterButton.Enabled = true;
+                int i = measureComboBox.SelectedIndex;
+                measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
+            }
+            else
+            {
+                measureClusterTextBox.Text = "...";
+                measureClusterTextBox.Enabled = false;
+                measureClusterLabel.Enabled = false;
+                measureClusterButton.Enabled = false;
+            }
+
+            switch (measure.key)
+            {
+                case Measure.Key.C:
+                    measureKeyTextBox.Text = "C major";
+                    break;
+                case Measure.Key.G:
+                    measureKeyTextBox.Text = "G major (# 1개)";
+                    break;
+                case Measure.Key.D:
+                    measureKeyTextBox.Text = "D major (# 2개)";
+                    break;
+                case Measure.Key.A:
+                    measureKeyTextBox.Text = "A major (# 3개)";
+                    break;
+                case Measure.Key.E:
+                    measureKeyTextBox.Text = "E major (# 4개)";
+                    break;
+                case Measure.Key.B:
+                    measureKeyTextBox.Text = "B major (# 5개)";
+                    break;
+                case Measure.Key.Gb:
+                    measureKeyTextBox.Text = "F# major (# 6개)";
+                    break;
+                case Measure.Key.Db:
+                    measureKeyTextBox.Text = "D♭ major (♭ 5개)";
+                    break;
+                case Measure.Key.Ab:
+                    measureKeyTextBox.Text = "A♭ major (♭ 4개)";
+                    break;
+                case Measure.Key.Eb:
+                    measureKeyTextBox.Text = "E♭ major (♭ 3개)";
+                    break;
+                case Measure.Key.Bb:
+                    measureKeyTextBox.Text = "B♭ major (♭ 2개)";
+                    break;
+                case Measure.Key.F:
+                    measureKeyTextBox.Text = "F major (♭ 1개)";
+                    break;
+                case Measure.Key.Cm:
+                    measureKeyTextBox.Text = "C minor (♭ 3개)";
+                    break;
+                case Measure.Key.Gm:
+                    measureKeyTextBox.Text = "G minor (♭ 2개)";
+                    break;
+                case Measure.Key.Dm:
+                    measureKeyTextBox.Text = "D minor (♭ 1개)";
+                    break;
+                case Measure.Key.Am:
+                    measureKeyTextBox.Text = "A minor";
+                    break;
+                case Measure.Key.Em:
+                    measureKeyTextBox.Text = "E minor (# 1개)";
+                    break;
+                case Measure.Key.Bm:
+                    measureKeyTextBox.Text = "B minor (# 2개)";
+                    break;
+                case Measure.Key.Gbm:
+                    measureKeyTextBox.Text = "F# minor (# 3개)";
+                    break;
+                case Measure.Key.Dbm:
+                    measureKeyTextBox.Text = "C# minor (# 4개)";
+                    break;
+                case Measure.Key.Abm:
+                    measureKeyTextBox.Text = "G# minor (# 5개)";
+                    break;
+                case Measure.Key.Ebm:
+                    measureKeyTextBox.Text = "D# minor (# 6개)";
+                    break;
+                case Measure.Key.Bbm:
+                    measureKeyTextBox.Text = "B♭ minor (♭ 5개)";
+                    break;
+                case Measure.Key.Fm:
+                    measureKeyTextBox.Text = "F minor (♭ 4개)";
+                    break;
+            }
+
+            measureComboBox.Focus();
+            panel3.Visible = true;
+        }
+
+        private void measureClusterButton_Click(object sender, EventArgs e, int measureIndex)
+        {
+
+        }
+
+        // https://stackoverflow.com/questions/91778/how-to-remove-all-event-handlers-from-an-event
+        private void RemoveClickEvent(Button b)
+        {
+            FieldInfo f1 = typeof(Control).GetField("EventClick",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            object obj = f1.GetValue(b);
+            PropertyInfo pi = b.GetType().GetProperty("Events",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            EventHandlerList list = (EventHandlerList)pi.GetValue(b, null);
+            list.RemoveHandler(obj, list[obj]);
         }
     }
 }

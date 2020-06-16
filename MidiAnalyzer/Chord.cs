@@ -478,6 +478,43 @@ namespace MidiAnalyzer
             return Color.FromArgb(alpha, c);
         }
 
+        public override string ToString()
+        {
+            string s = "";
+            if (type == Type.NULL) return "No chord";
+            switch (root)
+            {
+                case Root.C:
+                case Root.D:
+                case Root.E:
+                case Root.F:
+                case Root.G:
+                case Root.A:
+                case Root.B:
+                    s = root.ToString();
+                    break;
+                case Root.Ab:
+                case Root.Bb:
+                case Root.Db:
+                case Root.Eb:
+                case Root.Gb:
+                    s = root.ToString()[0] + "♭";
+                    break;
+            }
+
+            if (type == Type.Major)
+                return s;
+            else if (type == Type.minor)
+                return s + "m";
+            else if (type == Type.dom7)
+                return s + "7";
+            else
+            {
+                s += type.ToString();
+                return s;
+            }
+        }
+
         /// <summary>
         /// pitch의 음이름에 따른 색의 Hue 값을 반환합니다.
         /// 반환하는 값은 0 이상 359 이하입니다.

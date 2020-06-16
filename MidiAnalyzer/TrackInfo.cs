@@ -32,6 +32,8 @@ namespace MidiAnalyzer
 {
     public class TrackInfo
     {
+        public enum AnalysisStatus { Wait, Analyzing, Complete }
+
         public string songName;
         public int trackNum;
         public int measureCount;    // max(# of measure in all tracks with the same songName)
@@ -44,6 +46,8 @@ namespace MidiAnalyzer
         public Dictionary<int, KeyValuePair<int, MelodicContour>> representatives;
         public Dictionary<int, string> clusterOutputs;
 
+        public AnalysisStatus status;
+
         public TrackInfo(string fileName, int trackNum)
         {
             songName = fileName.Substring(0, fileName.LastIndexOf('.'));
@@ -52,6 +56,7 @@ namespace MidiAnalyzer
             score = new List<Note>();
             representatives = new Dictionary<int, KeyValuePair<int, MelodicContour>>();
             clusterOutputs = new Dictionary<int, string>();
+            status = AnalysisStatus.Wait;
         }
     }
 }
