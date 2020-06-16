@@ -95,7 +95,9 @@ namespace MidiAnalyzer
         /// <param name="monophonicScore">monophony인 악보</param>
         /// <param name="scoreLength">악보의 길이. 64분음표가 몇 개 들어가는지를 기준으로 합니다.
         /// 이 길이보다 같거나 뒤에 놓인 음표는 고려하지 않습니다. 예) 4/4박자에서 한 마디 길이: 64</param>
-        public MelodicContour(List<Note> monophonicScore, int scoreLength = 64)
+        /// <param name="relativePitch">true이면 음 높이 클러스터 번호로 첫 음표에 상대적인 음 높이를 사용합니다.
+        /// false이면 음 높이 클러스터 번호로 실제 음표의 음 높이를 사용합니다.</param>
+        public MelodicContour(List<Note> monophonicScore, int scoreLength = 64, bool relativePitch = true)
         {
             List<Note> score = new List<Note>(monophonicScore);
             score.Sort((e1, e2) =>
@@ -118,14 +120,28 @@ namespace MidiAnalyzer
                 if (score[i].GetAbsolutePosition() >= endNote.GetAbsolutePosition())
                     break;
 
-                if (i < score.Count - 1)
-                    this.InsertNote(noteList.Count,
-                        (int)(score[i + 1].GetAbsolutePosition() - score[i].GetAbsolutePosition()),
-                        score[i].Pitch - score[0].Pitch);
-                else                                    // Last note
-                    this.InsertNote(noteList.Count,
-                        (int)(endNote.GetAbsolutePosition() - score[i].GetAbsolutePosition()),
-                        score[i].Pitch - score[0].Pitch);
+                if (relativePitch)
+                {
+                    if (i < score.Count - 1)
+                        this.InsertNote(noteList.Count,
+                            (int)(score[i + 1].GetAbsolutePosition() - score[i].GetAbsolutePosition()),
+                            score[i].Pitch - score[0].Pitch);
+                    else                                    // Last note
+                        this.InsertNote(noteList.Count,
+                            (int)(endNote.GetAbsolutePosition() - score[i].GetAbsolutePosition()),
+                            score[i].Pitch - score[0].Pitch);
+                }
+                else
+                {
+                    if (i < score.Count - 1)
+                        this.InsertNote(noteList.Count,
+                            (int)(score[i + 1].GetAbsolutePosition() - score[i].GetAbsolutePosition()),
+                            score[i].Pitch);
+                    else                                    // Last note
+                        this.InsertNote(noteList.Count,
+                            (int)(endNote.GetAbsolutePosition() - score[i].GetAbsolutePosition()),
+                            score[i].Pitch);
+                }
             }
         }
 
@@ -1213,10 +1229,10 @@ namespace MidiAnalyzer
                                 print += "0";
                                 break;
                             case 1:
-                                print += "+";
+                                print += "/";
                                 break;
                             case -1:
-                                print += "-";
+                                print += "\\";
                                 break;
                             default:
                                 // Something wrong!
@@ -1243,6 +1259,34 @@ namespace MidiAnalyzer
                     print += " " + metadataList[i].pitchCluster + "\n";
             }
             return print;
+        }
+
+        /// <summary>
+        /// 이 멜로디 형태 뒤에 other 멜로디 형태의 음표들을 차례로 추가하여
+        /// 새로운 멜로디 형태로 반환합니다.
+        /// </summary>
+        /// <param name="other">다른 멜로디 형태</param>
+        /// <returns></returns>
+        public MelodicContour Concatenate(MelodicContour other)
+        {
+            // 1. 마지막 음표를 other의 첫 쉼표 길이만큼 늘인다.
+            // 2. other의 음표들을 순서대로 Insert한다.
+            MelodicContour melodicContour = this.Copy();
+            if (melodicContour.noteList.Last != null)
+            {
+                melodicContour.ReplaceNote(melodicContour.noteList.Count - 1,
+                    new MelodicContourNote(melodicContour.noteList.Last.Value.Duration + other.firstRestDuration,
+                    melodicContour.noteList.Last.Value.PitchCluster));
+            }
+            else
+            {
+                melodicContour.DelayNotes(melodicContour.firstRestDuration + other.firstRestDuration);
+            }
+            foreach (MelodicContourNote note in other.noteList)
+            {
+                melodicContour.InsertNote(melodicContour.noteList.Count, note.Copy());
+            }
+            return melodicContour;
         }
 
         /// <summary>

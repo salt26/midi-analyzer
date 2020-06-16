@@ -40,7 +40,7 @@ namespace MidiAnalyzer
         public List<Measure> measures;
         public List<Note> score;
         public DbscanResult<KeyValuePair<int, MelodicContour>> dbscanResult;
-        public List<int> longestRepeatedMelodicContourSequence;
+        public List<KeyValuePair<int, List<int>>> repeatedMelodicContourSequences;
 
         // representatives[melodicContourID] = KeyValuePair(measureNum, melodicContour)
         public Dictionary<int, KeyValuePair<int, MelodicContour>> representatives;
@@ -58,6 +58,7 @@ namespace MidiAnalyzer
             representatives = new Dictionary<int, KeyValuePair<int, MelodicContour>>();
             clusterOutputs = new Dictionary<int, string>();
             clusterIDs = new List<int>();
+            repeatedMelodicContourSequences = new List<KeyValuePair<int, List<int>>>();
             status = AnalysisStatus.Wait;
         }
     }

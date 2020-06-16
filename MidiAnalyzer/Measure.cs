@@ -45,6 +45,7 @@ namespace MidiAnalyzer
         public List<Note> monophonicScore;
         public Chord chord;
         public MelodicContour melodicContour;
+        public MelodicContour melodicContourWithAbsolutePitch;
         public int melodicContourID;            // no notes: 0, noise cluster: negative integer
         public string melodicContourOutput;
 

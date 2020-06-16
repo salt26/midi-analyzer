@@ -385,6 +385,8 @@ namespace MidiAnalyzer
 
                     measure.melodicContour = new MelodicContour(measure.monophonicScore,
                         64 * measure.timeSignature.Key / measure.timeSignature.Value);
+                    measure.melodicContourWithAbsolutePitch = new MelodicContour(measure.monophonicScore,
+                        64 * measure.timeSignature.Key / measure.timeSignature.Value, false);
                     //measure.melodicContour.Print();
                     measure.melodicContourOutput = measure.melodicContour.PrintToString();
 
@@ -557,12 +559,12 @@ namespace MidiAnalyzer
                 Console.WriteLine();
 
                 Console.WriteLine("Repeated Melodic Contour ID Sequences with 4 or more length");
-                List<List<int>> rs = LongestRepeatedSubstrings(melodicContourSequence, 4);
-                foreach (List<int> s in rs)
+                track.repeatedMelodicContourSequences = LongestRepeatedSubstrings(melodicContourSequence, 4);
+                foreach (KeyValuePair<int, List<int>> s in track.repeatedMelodicContourSequences)
                 {
-                    for (int i = 0; i < s.Count; i++)
+                    for (int i = 0; i < s.Value.Count; i++)
                     {
-                        Console.Write(s[i] + " ");
+                        Console.Write(s.Value[i] + " ");
                     }
                     Console.WriteLine();
                 }
@@ -591,9 +593,9 @@ namespace MidiAnalyzer
             return String.Format("{0}:{1}:{2}", bar, beat, tick);
         }
 
-        public List<List<int>> LongestRepeatedSubstrings(List<int> melodicContourIDSequence, int minLength = 4)
+        public List<KeyValuePair<int, List<int>>> LongestRepeatedSubstrings(List<int> melodicContourIDSequence, int minLength = 4)
         {
-            List<List<int>> results = new List<List<int>>();
+            List< KeyValuePair<int, List<int>>> results = new List<KeyValuePair<int, List<int>>>();
             List<int> endIndices = new List<int>();
             for (int i = 0; i <= melodicContourIDSequence.Count - (minLength * 2); i++)
             {
@@ -639,16 +641,16 @@ namespace MidiAnalyzer
                 if (maxLength >= minLength && !endIndices.Contains(i + maxLength - 1))
                 {
                     bool isReplicated = false;
-                    foreach (List<int> l in results)
+                    foreach (KeyValuePair<int, List<int>> l in results)
                     {
                         bool isEqual1 = true, isEqual2 = true;
-                        for (int j = 0; j < Math.Min(l.Count, maxLength); j++)
+                        for (int j = 0; j < Math.Min(l.Value.Count, maxLength); j++)
                         {
-                            if (l[j] != maxSequence[j])
+                            if (l.Value[j] != maxSequence[j])
                             {
                                 isEqual1 = false;
                             }
-                            if (l[l.Count - 1 - j] != maxSequence[maxLength - 1 - j])
+                            if (l.Value[l.Value.Count - 1 - j] != maxSequence[maxLength - 1 - j])
                             {
                                 isEqual2 = false;
                             }
@@ -665,7 +667,7 @@ namespace MidiAnalyzer
                     }
                     if (!isReplicated)
                     {
-                        results.Add(maxSequence);
+                        results.Add(new KeyValuePair<int, List<int>>(i, maxSequence));
                         endIndices.Add(i + maxLength - 1);
                     }
                 }
@@ -790,38 +792,89 @@ namespace MidiAnalyzer
 
             if (seletedTrackIndex >= 0 && seletedTrackIndex == trackIndex)
             {
-                // 마디 정보 탭
+                // 마디 정보 탭이 아닌 탭을 활성화
                 (tabControl1.TabPages[1] as TabPage).Enabled = true;
                 (tabControl1.TabPages[2] as TabPage).Enabled = true;
 
-                if (tabControl1.SelectedIndex == 0)
+                if (measureComboBox.SelectedItem != null)
                 {
-                    if (measureComboBox.SelectedItem != null)
+                    Measure measure = tracks[seletedTrackIndex].measures[measureComboBox.SelectedIndex];
+                    if (measure != null)
                     {
-                        Measure measure = tracks[seletedTrackIndex].measures[measureComboBox.SelectedIndex];
-                        if (measure != null)
-                        {
-                            measureClusterTextBox.Text = measure.melodicContourID.ToString();
-                            measureClusterTextBox.Enabled = true;
-                            measureClusterLabel.Enabled = true;
-                            measureClusterButton.Enabled = true;
-                            int i = measureComboBox.SelectedIndex;
-                            measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
-                        }
+                        measureClusterTextBox.Text = measure.melodicContourID.ToString();
+                        measureClusterTextBox.Enabled = true;
+                        measureClusterLabel.Enabled = true;
+                        measureClusterButton.Enabled = true;
+                        int i = measureComboBox.SelectedIndex;
+                        measureClusterButton.Click += (object sender2, EventArgs e2) => { measureClusterButton_Click(sender2, e2, i); };
                     }
                 }
-                else if (tabControl1.SelectedIndex == 1)
-                {
-                    clusterComboBox.Text = "클러스터 번호 선택!";
-                    clusterComboBox.Items.Clear();
 
-                    clusterComboBox.Items.Add("단독 클러스터");
-                    for (int i = 1; i < tracks[seletedTrackIndex].clusterIDs.Count; i++)
-                    {
-                        clusterComboBox.Items.Add(tracks[seletedTrackIndex].clusterIDs[i] + "번 클러스터");
-                    }
-                    clusterMainLabel.Text = "";
+
+                clusterComboBox.Text = "클러스터 번호 선택!";
+                clusterComboBox.Items.Clear();
+
+                clusterComboBox.Items.Add("단독 클러스터");
+                for (int i = 1; i < tracks[seletedTrackIndex].clusterIDs.Count; i++)
+                {
+                    clusterComboBox.Items.Add(tracks[seletedTrackIndex].clusterIDs[i] + "번 클러스터");
                 }
+                clusterMainLabel.Text = "";
+
+
+                structureMainLabel.Text = tracks[seletedTrackIndex].songName + " > 트랙 " +
+                    tracks[seletedTrackIndex].trackNum;
+                structurePatternComboBox.Items.Clear();
+                structurePatternTextBox.Clear();
+                structureSequenceTextBox.Clear();
+
+                if (tracks[seletedTrackIndex].repeatedMelodicContourSequences.Count == 0)
+                {
+                    structurePatternComboBox.Text = "반복되는 멜로디 형태 패턴이 없습니다.";
+                    structurePatternComboBox.Enabled = false;
+                }
+                else
+                {
+                    structurePatternComboBox.Text = "멜로디 형태 패턴 선택!";
+                    structurePatternComboBox.Enabled = true;
+                    foreach (KeyValuePair<int, List<int>> s in tracks[seletedTrackIndex].repeatedMelodicContourSequences)
+                    {
+                        string str = "";
+                        for (int i = 0; i < s.Value.Count; i++)
+                        {
+                            str += s.Value[i] + " ";
+                        }
+                        structurePatternComboBox.Items.Add(str.TrimEnd(' '));
+                    }
+                }
+
+                string str1 = "    마디 번호  ";
+                string str2 = "클러스터 번호  ";
+                for (int i = 0; i < tracks[seletedTrackIndex].measures.Count; i++)
+                {
+                    string a = tracks[seletedTrackIndex].measures[i].measureNum.ToString();
+                    string b = tracks[seletedTrackIndex].measures[i].melodicContourID.ToString();
+                    while (a.Length < b.Length)
+                    {
+                        a = " " + a;
+                    }
+                    while (a.Length > b.Length)
+                    {
+                        b = " " + b;
+                    }
+                    str1 += a + " ";
+                    str2 += b + " ";
+                }
+
+                structureSequenceTextBox.AppendText(str1.TrimEnd(' '));
+                structureSequenceTextBox.AppendText(Environment.NewLine);
+                structureSequenceTextBox.AppendText(str2.TrimEnd(' '));
+
+                // 커서가 텍스트의 시작 위치에 놓이도록 함
+                structureSequenceTextBox.Focus();
+                structureSequenceTextBox.SelectionStart = 0;
+                structureSequenceTextBox.SelectionLength = 0;
+                structureSequenceTextBox.ScrollToCaret();
             }
         }
 
@@ -838,8 +891,10 @@ namespace MidiAnalyzer
             measureClusterTextBox.Text = "";
             measureComboBox.Text = "마디 번호 선택!";
             clusterComboBox.Text = "클러스터 번호 선택!";
+            structurePatternComboBox.Text = "멜로디 형태 패턴 선택!";
 
             measurePanel.Visible = false;
+            clusterPanel.Visible = false;
 
             seletedTrackIndex = trackIndex;
 
@@ -867,12 +922,68 @@ namespace MidiAnalyzer
                 measureClusterLabel.Enabled = true;
                 measureClusterButton.Enabled = true;
 
+
                 clusterComboBox.Items.Add("단독 클러스터");
                 for (int i = 1; i < tracks[seletedTrackIndex].clusterIDs.Count; i++)
                 {
                     clusterComboBox.Items.Add(tracks[seletedTrackIndex].clusterIDs[i] + "번 클러스터");
                 }
                 clusterMainLabel.Text = "";
+
+
+                structureMainLabel.Text = tracks[seletedTrackIndex].songName + " > 트랙 " +
+                        tracks[seletedTrackIndex].trackNum;
+                structurePatternComboBox.Items.Clear();
+                structurePatternTextBox.Clear();
+                structureSequenceTextBox.Clear();
+
+                if (tracks[seletedTrackIndex].repeatedMelodicContourSequences.Count == 0)
+                {
+                    structurePatternComboBox.Text = "반복되는 멜로디 형태 패턴이 없습니다.";
+                    structurePatternComboBox.Enabled = false;
+                }
+                else
+                {
+                    structurePatternComboBox.Text = "멜로디 형태 패턴 선택!";
+                    structurePatternComboBox.Enabled = true;
+                    foreach (KeyValuePair<int, List<int>> s in tracks[seletedTrackIndex].repeatedMelodicContourSequences)
+                    {
+                        string str = "";
+                        for (int i = 0; i < s.Value.Count; i++)
+                        {
+                            str += s.Value[i] + " ";
+                        }
+                        structurePatternComboBox.Items.Add(str.TrimEnd(' '));
+                    }
+                }
+
+                string str1 = "    마디 번호  ";
+                string str2 = "클러스터 번호  ";
+                for (int i = 0; i < tracks[seletedTrackIndex].measures.Count; i++)
+                {
+                    string a = tracks[seletedTrackIndex].measures[i].measureNum.ToString();
+                    string b = tracks[seletedTrackIndex].measures[i].melodicContourID.ToString();
+                    while (a.Length < b.Length)
+                    {
+                        a = " " + a;
+                    }
+                    while (a.Length > b.Length)
+                    {
+                        b = " " + b;
+                    }
+                    str1 += a + " ";
+                    str2 += b + " ";
+                }
+
+                structureSequenceTextBox.AppendText(str1.TrimEnd(' '));
+                structureSequenceTextBox.AppendText(Environment.NewLine);
+                structureSequenceTextBox.AppendText(str2.TrimEnd(' '));
+
+                // 커서가 텍스트의 시작 위치에 놓이도록 함
+                structureSequenceTextBox.Focus();
+                structureSequenceTextBox.SelectionStart = 0;
+                structureSequenceTextBox.SelectionLength = 0;
+                structureSequenceTextBox.ScrollToCaret();
             }
             else
             {
@@ -882,9 +993,11 @@ namespace MidiAnalyzer
                 measureClusterLabel.Enabled = false;
                 measureClusterButton.Enabled = false;
                 clusterMainLabel.Text = "몇 분 정도의 시간이 소요될 수 있습니다.";
+                structureMainLabel.Text = "몇 분 정도의 시간이 소요될 수 있습니다.";
+                structurePatternComboBox.Items.Clear();
+                structurePatternTextBox.Clear();
+                structureSequenceTextBox.Clear();
             }
-
-            clusterPanel.Visible = false;
 
             tabControl1.Visible = true;
         }
@@ -1129,6 +1242,48 @@ namespace MidiAnalyzer
 
             clusterComboBox.Focus();
             clusterPanel.Visible = true;
+        }
+
+        private void structurePatternComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            KeyValuePair<int, List<int>> l = tracks[seletedTrackIndex].repeatedMelodicContourSequences[
+                structurePatternComboBox.SelectedIndex];
+
+            MelodicContour mc = new MelodicContour(0);
+            for (int i = 0; i < l.Value.Count; i++)
+            {
+                int melodicContourID = l.Value[i];
+                int measureIndex = i + l.Key;
+                if (tracks[seletedTrackIndex].representatives.ContainsKey(melodicContourID))
+                {
+                    Measure measure = tracks[seletedTrackIndex].measures.Find(el => el.measureNum == tracks[seletedTrackIndex].representatives[melodicContourID].Key);
+                    if (measure == null) continue;
+                    mc = mc.Concatenate(measure.melodicContourWithAbsolutePitch);
+                }
+                else
+                {
+                    // melodicContourID == 0 (cannot be negative)
+                    mc = mc.Concatenate(new MelodicContour(64 * tracks[seletedTrackIndex].measures[i + l.Key].timeSignature.Key /
+                        tracks[seletedTrackIndex].measures[i + l.Key].timeSignature.Value));
+                }
+            }
+            string output = mc.PrintToString().TrimEnd('\n');
+
+            structurePatternTextBox.Clear();
+
+            foreach (string s in output.Split('\n'))
+            {
+                structurePatternTextBox.AppendText(s);
+                structurePatternTextBox.AppendText(Environment.NewLine);
+            }
+
+            // 커서가 텍스트의 시작 위치에 놓이도록 함
+            structurePatternTextBox.Focus();
+            structurePatternTextBox.SelectionStart = 0;
+            structurePatternTextBox.SelectionLength = 0;
+            structurePatternTextBox.ScrollToCaret();
+
+            structurePatternComboBox.Focus();
         }
 
         // https://stackoverflow.com/questions/91778/how-to-remove-all-event-handlers-from-an-event

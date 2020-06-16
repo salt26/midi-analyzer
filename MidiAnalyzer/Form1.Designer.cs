@@ -86,6 +86,14 @@
             this.clusterPanel = new System.Windows.Forms.Panel();
             this.clusterMainLabel = new System.Windows.Forms.Label();
             this.clusterTextBox = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.structureMainLabel = new System.Windows.Forms.Label();
+            this.structureSequenceTextBox = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.structurePatternTextBox = new System.Windows.Forms.TextBox();
+            this.structurePatternComboBox = new System.Windows.Forms.ComboBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericMinimumPoints)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericEpsilon)).BeginInit();
@@ -98,6 +106,7 @@
             this.tabControl1.SuspendLayout();
             this.measureTabPage.SuspendLayout();
             this.clusterTabPage.SuspendLayout();
+            this.structureTabPage.SuspendLayout();
             this.measurePanel.SuspendLayout();
             this.clusterPanel.SuspendLayout();
             this.SuspendLayout();
@@ -554,9 +563,17 @@
             // structureTabPage
             // 
             this.structureTabPage.BackColor = System.Drawing.SystemColors.Control;
+            this.structureTabPage.Controls.Add(this.structurePatternComboBox);
+            this.structureTabPage.Controls.Add(this.structurePatternTextBox);
+            this.structureTabPage.Controls.Add(this.label23);
+            this.structureTabPage.Controls.Add(this.label22);
+            this.structureTabPage.Controls.Add(this.label21);
+            this.structureTabPage.Controls.Add(this.structureSequenceTextBox);
+            this.structureTabPage.Controls.Add(this.structureMainLabel);
+            this.structureTabPage.Controls.Add(this.label20);
             this.structureTabPage.Location = new System.Drawing.Point(4, 37);
             this.structureTabPage.Name = "structureTabPage";
-            this.structureTabPage.Size = new System.Drawing.Size(536, 541);
+            this.structureTabPage.Size = new System.Drawing.Size(556, 541);
             this.structureTabPage.TabIndex = 2;
             this.structureTabPage.Text = "곡의 구조 정보";
             // 
@@ -825,6 +842,101 @@
             this.clusterTextBox.TabIndex = 25;
             this.clusterTextBox.WordWrap = false;
             // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label20.Location = new System.Drawing.Point(21, 74);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(383, 32);
+            this.label20.TabIndex = 4;
+            this.label20.Text = "멜로디 형태 클러스터 번호 시퀀스";
+            // 
+            // structureMainLabel
+            // 
+            this.structureMainLabel.AutoSize = true;
+            this.structureMainLabel.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.structureMainLabel.ForeColor = System.Drawing.Color.OrangeRed;
+            this.structureMainLabel.Location = new System.Drawing.Point(21, 24);
+            this.structureMainLabel.Name = "structureMainLabel";
+            this.structureMainLabel.Size = new System.Drawing.Size(452, 32);
+            this.structureMainLabel.TabIndex = 5;
+            this.structureMainLabel.Text = "몇 분 정도의 시간이 소요될 수 있습니다.";
+            // 
+            // structureSequenceTextBox
+            // 
+            this.structureSequenceTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.structureSequenceTextBox.Font = new System.Drawing.Font("돋움체", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.structureSequenceTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.structureSequenceTextBox.Location = new System.Drawing.Point(14, 125);
+            this.structureSequenceTextBox.Multiline = true;
+            this.structureSequenceTextBox.Name = "structureSequenceTextBox";
+            this.structureSequenceTextBox.ReadOnly = true;
+            this.structureSequenceTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.structureSequenceTextBox.Size = new System.Drawing.Size(528, 80);
+            this.structureSequenceTextBox.TabIndex = 26;
+            this.structureSequenceTextBox.Text = "    마디 번호  1 2   3 4 \r\n클러스터 번호  0 0 -12 1";
+            this.structureSequenceTextBox.WordWrap = false;
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label21.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.label21.Location = new System.Drawing.Point(22, 212);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(310, 28);
+            this.label21.TabIndex = 27;
+            this.label21.Text = "* 음표가 없는 마디: 0번 클러스터";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label22.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.label22.Location = new System.Drawing.Point(22, 244);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(434, 28);
+            this.label22.TabIndex = 28;
+            this.label22.Text = "** 단독 클러스터에 속하는 마디: 음수 클러스터";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Font = new System.Drawing.Font("맑은 고딕", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label23.Location = new System.Drawing.Point(21, 298);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(503, 32);
+            this.label23.TabIndex = 29;
+            this.label23.Text = "네 마디 이상 반복되는 대표 멜로디 형태 패턴";
+            // 
+            // structurePatternTextBox
+            // 
+            this.structurePatternTextBox.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.structurePatternTextBox.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.structurePatternTextBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.structurePatternTextBox.Location = new System.Drawing.Point(14, 388);
+            this.structurePatternTextBox.Multiline = true;
+            this.structurePatternTextBox.Name = "structurePatternTextBox";
+            this.structurePatternTextBox.ReadOnly = true;
+            this.structurePatternTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.structurePatternTextBox.Size = new System.Drawing.Size(528, 138);
+            this.structurePatternTextBox.TabIndex = 30;
+            this.structurePatternTextBox.WordWrap = false;
+            // 
+            // structurePatternComboBox
+            // 
+            this.structurePatternComboBox.DropDownHeight = 72;
+            this.structurePatternComboBox.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.structurePatternComboBox.FormattingEnabled = true;
+            this.structurePatternComboBox.IntegralHeight = false;
+            this.structurePatternComboBox.Location = new System.Drawing.Point(27, 343);
+            this.structurePatternComboBox.Name = "structurePatternComboBox";
+            this.structurePatternComboBox.Size = new System.Drawing.Size(505, 31);
+            this.structurePatternComboBox.TabIndex = 31;
+            this.structurePatternComboBox.Text = "멜로디 형태 패턴 선택!";
+            this.structurePatternComboBox.SelectedIndexChanged += new System.EventHandler(this.structurePatternComboBox_SelectedIndexChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -853,6 +965,8 @@
             this.measureTabPage.ResumeLayout(false);
             this.clusterTabPage.ResumeLayout(false);
             this.clusterTabPage.PerformLayout();
+            this.structureTabPage.ResumeLayout(false);
+            this.structureTabPage.PerformLayout();
             this.measurePanel.ResumeLayout(false);
             this.measurePanel.PerformLayout();
             this.clusterPanel.ResumeLayout(false);
@@ -921,6 +1035,14 @@
         private System.Windows.Forms.ComboBox clusterComboBox;
         private System.Windows.Forms.Label clusterMainLabel;
         private System.Windows.Forms.TextBox clusterTextBox;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.TextBox structureSequenceTextBox;
+        private System.Windows.Forms.Label structureMainLabel;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.ComboBox structurePatternComboBox;
+        private System.Windows.Forms.TextBox structurePatternTextBox;
     }
 }
 
