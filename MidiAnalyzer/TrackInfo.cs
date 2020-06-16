@@ -39,5 +39,19 @@ namespace MidiAnalyzer
         public List<Note> score;
         public DbscanResult<KeyValuePair<int, MelodicContour>> dbscanResult;
         public List<int> longestRepeatedMelodicContourSequence;
+
+        // representatives[melodicContourID] = KeyValuePair(measureNum, melodicContour)
+        public Dictionary<int, KeyValuePair<int, MelodicContour>> representatives;
+        public Dictionary<int, string> clusterOutputs;
+
+        public TrackInfo(string fileName, int trackNum)
+        {
+            songName = fileName.Substring(0, fileName.LastIndexOf('.'));
+            this.trackNum = trackNum;
+            measures = new List<Measure>();
+            score = new List<Note>();
+            representatives = new Dictionary<int, KeyValuePair<int, MelodicContour>>();
+            clusterOutputs = new Dictionary<int, string>();
+        }
     }
 }

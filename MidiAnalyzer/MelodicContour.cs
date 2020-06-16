@@ -1160,27 +1160,36 @@ namespace MidiAnalyzer
         /// </summary>
         public void Print()
         {
+            Console.WriteLine(PrintToString());
+        }
+
+        /// <summary>
+        /// 이 멜로디 형태를 보기 좋은 문자열로 반환합니다.
+        /// 만약 'X'가 출력에 포함된다면 오류가 발생한 것입니다.
+        /// </summary>
+        public string PrintToString()
+        {
             if (noteList == null || noteList.Count == 0)
             {
-                Console.WriteLine("Empty MelodicContour");
-                return;
+                return "Empty MelodicContour";
             }
             int onset = firstRestDuration;
             int length = onset;
-            Console.Write(firstRestDuration);
+            string print = "";
+            print += firstRestDuration;
             foreach (MelodicContourNote note in noteList)
             {
-                Console.Write(" [" + note.Duration + "," + note.PitchCluster + "]");
+                print += " [" + note.Duration + "," + note.PitchCluster + "]";
                 length += note.Duration;
             }
-            Console.WriteLine();
+            print += "\n";
 
             for (int j = 0; j <= length; j++)
             {
-                if (j > 0 && j % 10 == 0) Console.Write((j / 10) % 10);
-                else Console.Write(" ");
+                if (j > 0 && j % 10 == 0) print += ((j / 10) % 10);
+                else print += " ";
             }
-            Console.WriteLine();
+            print += "\n";
 
             for (int i = metadataList.Count - 1; i >= 0; i--)
             {
@@ -1188,31 +1197,30 @@ namespace MidiAnalyzer
                 onset = firstRestDuration;
                 for (int j = 0; j <= length; j++)
                 {
-                    //Console.WriteLine(node.Value.PitchCluster + " ==? " + metadataList[i].pitchCluster);
                     if (node == null)
-                        Console.Write(".");
+                        print += ".";
                     else if (onset == j && node.Value.PitchCluster == metadataList[i].pitchCluster &&
                         !metadataList[i].noteNodes.Contains(node))
                     {
                         // metadataList and noteList are inconsistent!
-                        Console.Write("X");
+                        print += "X";
                     }
                     else if (onset == j && node.Value.PitchCluster == metadataList[i].pitchCluster)
                     {
                         switch (PitchVariance(node))
                         {
                             case 0:
-                                Console.Write("0");
+                                print += "0";
                                 break;
                             case 1:
-                                Console.Write("+");
+                                print += "+";
                                 break;
                             case -1:
-                                Console.Write("-");
+                                print += "-";
                                 break;
                             default:
                                 // Something wrong!
-                                Console.Write("X");
+                                print += "X";
                                 break;
                         }
                         onset += node.Value.Duration;
@@ -1220,20 +1228,21 @@ namespace MidiAnalyzer
                     }
                     else if (onset == j)
                     {
-                        Console.Write(".");
+                        print += ".";
                         onset += node.Value.Duration;
                         node = node.Next;
                     }
                     else
                     {
-                        Console.Write(".");
+                        print += ".";
                     }
                 }
                 if (metadataList[i].pitchCluster >= 0)
-                    Console.WriteLine("  " + metadataList[i].pitchCluster);
+                    print += "  " + metadataList[i].pitchCluster + "\n";
                 else
-                    Console.WriteLine(" " + metadataList[i].pitchCluster);
+                    print += " " + metadataList[i].pitchCluster + "\n";
             }
+            return print;
         }
 
         /// <summary>

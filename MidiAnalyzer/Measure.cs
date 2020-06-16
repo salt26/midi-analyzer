@@ -46,7 +46,7 @@ namespace MidiAnalyzer
         public Chord chord;
         public MelodicContour melodicContour;
         public int melodicContourID;            // no notes: 0, noise cluster: negative integer
-        // Time signature is always fixed to 4/4.
+        public string melodicContourOutput;
 
         public Measure()
         {
