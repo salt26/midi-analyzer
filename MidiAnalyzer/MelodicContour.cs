@@ -152,36 +152,9 @@ namespace MidiAnalyzer
         public const int INVALID_COST = int.MaxValue / 2;
 
         /// <summary>
-        /// 편집 연산을 수행한 결과로 음표 또는 맨 앞 쉼표의 길이가 바뀌는 경우 발생하는 비용입니다.
-        /// Delete, Insert, Replace, Delay에서만 발생할 수 있습니다.
-        /// </summary>
-        public const int DURATION_COST = 3;
-
-        /// <summary>
-        /// 편집 연산을 수행한 결과로 음표의 시작 위치가 바뀌는 경우 발생하는 비용입니다.
-        /// Move, DelayAndReplace에서만 발생할 수 있습니다.
-        /// </summary>
-        public const int ONSET_COST = 3;
-
-        /// <summary>
-        /// 편집 연산을 수행한 결과로 음표의 음 높이 변화가 바뀌는 경우 발생하는 비용입니다.
-        /// </summary>
-        public const int PITCH_VARIANCE_COST = 4;
-
-        /// <summary>
-        /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 순위가 바뀌는 경우 발생하는 비용입니다.
-        /// </summary>
-        public const int PITCH_CLUSTER_RANK_COST = 1;
-
-        /// <summary>
         /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 개수가 바뀌는 경우 발생하는 비용입니다.
         /// </summary>
         public const int LOCAL_PITCH_CLUSTER_COUNT_COST = 0;
-
-        /// <summary>
-        /// 두 멜로디 형태의 음 높이 클러스터 개수 차이에 곱해져서 발생하는 비용입니다.
-        /// </summary>
-        public const int GLOBAL_PITCH_CLUSTER_COUNT_COST = 3;
 
         /// <summary>
         /// 음표 목록에 있는 한 음표가 직전 음표보다 높은 음을 가지면 1,
@@ -477,13 +450,13 @@ namespace MidiAnalyzer
             if (pv == 0)
             {
                 // (음표 추가로 인한 길이 변경 비용)
-                return DURATION_COST;
+                return Form1.form.pDurationCost;
             }
             else
             {
                 // 삽입된 음표의 음 높이 변화가 0이 아니므로 비용 추가
                 // (음표 추가로 인한 길이 변경 비용 + 삽입된 음표의 음 높이 변화 변경 비용 + 삽입된 음표의 클러스터 순위 변경 비용 + gamma)
-                return DURATION_COST + PITCH_VARIANCE_COST + PITCH_CLUSTER_RANK_COST + gamma;
+                return Form1.form.pDurationCost + Form1.form.pPitchVarianceCost + Form1.form.pPitchRankCost + gamma;
             }
         }
 
@@ -567,7 +540,7 @@ namespace MidiAnalyzer
             {
                 // 제거할 음표의 음 높이 변화가 0이 아니므로 비용 추가
                 // (제거할 음표의 음 높이 변화 변경 비용 + 제거할 음표의 클러스터 순위 변경 비용)
-                alpha = PITCH_VARIANCE_COST + PITCH_CLUSTER_RANK_COST; ;
+                alpha = Form1.form.pPitchVarianceCost + Form1.form.pPitchRankCost; ;
             }
 
             LinkedListNode<MelodicContourNote> next = node.Next;
@@ -582,7 +555,7 @@ namespace MidiAnalyzer
             }
 
             // (음표 제거로 인한 길이 변경 비용 + alpha + gamma)
-            return DURATION_COST + alpha + gamma;
+            return Form1.form.pDurationCost + alpha + gamma;
         }
 
         /// <summary>
@@ -652,7 +625,7 @@ namespace MidiAnalyzer
             if (oldNote.Duration != newNote.Duration)
             {
                 // (음표 길이 변경 비용)
-                beta = DURATION_COST;
+                beta = Form1.form.pDurationCost;
             }
 
             // 새 음표로 교체
@@ -665,7 +638,7 @@ namespace MidiAnalyzer
             if (oldPv != newPv)
             {
                 // (교체한 음표의 음 높이 변화 변경 비용)
-                alpha += PITCH_VARIANCE_COST;
+                alpha += Form1.form.pPitchVarianceCost;
             }
 
             int newClusterIndex = GetClusterRank(node);
@@ -673,7 +646,7 @@ namespace MidiAnalyzer
             if (oldClusterIndex != newClusterIndex)
             {
                 // (교체한 음표의 클러스터 순위 변경 비용)
-                alpha += PITCH_CLUSTER_RANK_COST;
+                alpha += Form1.form.pPitchRankCost;
             }
 
             if (node.Next != null)
@@ -749,7 +722,7 @@ namespace MidiAnalyzer
             else
             {
                 firstRestDuration = newFirstRestDuration;
-                return DURATION_COST;
+                return Form1.form.pDurationCost;
             }
         }
 
@@ -891,7 +864,7 @@ namespace MidiAnalyzer
             }
 
             // (뒤 음표 시작 위치 변경 비용)
-            int beta = ONSET_COST;
+            int beta = Form1.form.pOnsetCost;
 
             // 새 음표로 교체
             node1.Value = newFirstNote;
@@ -905,12 +878,12 @@ namespace MidiAnalyzer
             if (oldPv1 != newPv1)
             {
                 // (교체한 음표의 음 높이 변화 변경 비용)
-                alpha += PITCH_VARIANCE_COST;
+                alpha += Form1.form.pPitchVarianceCost;
             }
             if (oldPv2 != newPv2)
             {
                 // (교체한 음표의 음 높이 변화 변경 비용)
-                alpha += PITCH_VARIANCE_COST;
+                alpha += Form1.form.pPitchVarianceCost;
             }
 
             int newClusterIndex1 = GetClusterRank(node1);
@@ -918,12 +891,12 @@ namespace MidiAnalyzer
             if (oldClusterIndex1 != newClusterIndex1)
             {
                 // (교체한 음표의 클러스터 순위 변경 비용)
-                alpha += PITCH_CLUSTER_RANK_COST;
+                alpha += Form1.form.pPitchRankCost;
             }
             if (oldClusterIndex2 != newClusterIndex2)
             {
                 // (교체한 음표의 클러스터 순위 변경 비용)
-                alpha += PITCH_CLUSTER_RANK_COST;
+                alpha += Form1.form.pPitchRankCost;
             }
 
             if (node2.Next != null)
@@ -1067,7 +1040,7 @@ namespace MidiAnalyzer
             }
 
             // (음표 시작 위치 변경 비용)
-            int beta = ONSET_COST;
+            int beta = Form1.form.pOnsetCost;
 
             // 새 음표로 교체
             node1.Value = newFirstNote;
@@ -1584,7 +1557,7 @@ namespace MidiAnalyzer
 
             #region this 멜로디 형태와 other 멜로디 형태의 음 높이 클러스터 개수 차이 계산
 
-            pitchClusterCountCost = Math.Abs(this.metadataList.Count - other.metadataList.Count) * GLOBAL_PITCH_CLUSTER_COUNT_COST;
+            pitchClusterCountCost = Math.Abs(this.metadataList.Count - other.metadataList.Count) * Form1.form.pPitchCountCost;
 
             #endregion
 

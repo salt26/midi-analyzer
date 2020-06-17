@@ -43,20 +43,59 @@ namespace MidiAnalyzer
 
         public static Form1 form;
 
-        private const int DBSCAN_EPSILON = 5;
-
-        private const int DBSCAN_MINIMUM_POINTS = 2;
-
         public List<TrackInfo> tracks = new List<TrackInfo>();
 
         private string filePath = "";
-        private int pDuration = 3;
-        private int pOnset = 3;
-        private int pPitchVariance = 4;
-        private int pPitchRank = 1;
-        private int pPitchCount = 3;
-        private int pEpsilon = 5;
-        private int pMinimumPoints = 2;
+
+        /// <summary>
+        /// 편집 연산을 수행한 결과로 음표 또는 맨 앞 쉼표의 길이가 바뀌는 경우 발생하는 비용입니다.
+        /// Delete, Insert, Replace, Delay에서만 발생할 수 있습니다.
+        /// </summary>
+        public int pDurationCost
+        {
+            get;
+            private set;
+        } = 3;
+
+        /// <summary>
+        /// 편집 연산을 수행한 결과로 음표의 시작 위치가 바뀌는 경우 발생하는 비용입니다.
+        /// Move, DelayAndReplace에서만 발생할 수 있습니다.
+        /// </summary>
+        public int pOnsetCost
+        {
+            get;
+            private set;
+        } = 3;
+
+        /// <summary>
+        /// 편집 연산을 수행한 결과로 음표의 음 높이 변화가 바뀌는 경우 발생하는 비용입니다.
+        /// </summary>
+        public int pPitchVarianceCost
+        {
+            get;
+            private set;
+        } = 4;
+
+        /// <summary>
+        /// 편집 연산을 수행한 결과로 음표의 음 높이 클러스터 순위가 바뀌는 경우 발생하는 비용입니다.
+        /// </summary>
+        public int pPitchRankCost
+        {
+            get;
+            private set;
+        } = 1;
+
+        /// <summary>
+        /// 두 멜로디 형태의 음 높이 클러스터 개수 차이에 곱해져서 발생하는 비용입니다.
+        /// </summary>
+        public int pPitchCountCost
+        {
+            get;
+            private set;
+        } = 3;
+
+        private int pDbscanEpsilon = 5;
+        private int pDbscanMinimumPoints = 2;
 
         private MidiFile mf = null;
         private int seletedTrackIndex = -1;
@@ -460,7 +499,7 @@ namespace MidiAnalyzer
                     new DbscanAlgorithm<KeyValuePair<int, MelodicContour>>((e1, e2) => e1.Value.Distance(e2.Value));
 
                 DbscanResult<KeyValuePair<int, MelodicContour>> result = dbscan.ComputeClusterDbscan(
-                    melodicContourData.ToArray(), DBSCAN_EPSILON, DBSCAN_MINIMUM_POINTS);               // DBSCAN parameter setting
+                    melodicContourData.ToArray(), pDbscanEpsilon, pDbscanMinimumPoints);               // DBSCAN parameter setting
 
                 track.dbscanResult = result;
 
@@ -721,9 +760,9 @@ namespace MidiAnalyzer
             fileNameTextBox.Text = "곡: " + FileNameWithoutExtension(FilePathToName(filePath));
             parameterTextBox.AppendText("유형 " + mf.FileFormat + ", 박자 당 tick 수: " + mf.DeltaTicksPerQuarterNote);
             parameterTextBox.AppendText(Environment.NewLine);
-            parameterTextBox.AppendText("(" + pDuration + ", " + pOnset + " / " +
-                pPitchVariance + ", " + pPitchRank + ", " + pPitchCount + " / " +
-                pEpsilon + ", " + pMinimumPoints + ")");
+            parameterTextBox.AppendText("(" + pDurationCost + ", " + pOnsetCost + " / " +
+                pPitchVarianceCost + ", " + pPitchRankCost + ", " + pPitchCountCost + " / " +
+                pDbscanEpsilon + ", " + pDbscanMinimumPoints + ")");
 
             if (tracks.Count > 7)
             {
@@ -1040,19 +1079,19 @@ namespace MidiAnalyzer
 
         private void defaultSettingButton_Click(object sender, EventArgs e)
         {
-            pDuration = 3;
-            pOnset = 3;
-            pPitchVariance = 4;
-            pPitchRank = 1;
-            pPitchCount = 3;
-            pEpsilon = 5;
-            pMinimumPoints = 2;
+            pDurationCost = 3;
+            pOnsetCost = 3;
+            pPitchVarianceCost = 4;
+            pPitchRankCost = 1;
+            pPitchCountCost = 3;
+            pDbscanEpsilon = 5;
+            pDbscanMinimumPoints = 2;
 
-            numericDuration.Value = pDuration;
-            numericOnset.Value = pOnset;
-            numericPitchVariance.Value = pPitchVariance;
-            numericPitchRank.Value = pPitchRank;
-            numericPitchCount.Value = pPitchCount;
+            numericDuration.Value = pDurationCost;
+            numericOnset.Value = pOnsetCost;
+            numericPitchVariance.Value = pPitchVarianceCost;
+            numericPitchRank.Value = pPitchRankCost;
+            numericPitchCount.Value = pPitchCountCost;
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1062,37 +1101,37 @@ namespace MidiAnalyzer
 
         private void numericDuration_ValueChanged(object sender, EventArgs e)
         {
-            pDuration = (int)numericDuration.Value;
+            pDurationCost = (int)numericDuration.Value;
         }
 
         private void numericOnset_ValueChanged(object sender, EventArgs e)
         {
-            pOnset = (int)numericOnset.Value;
+            pOnsetCost = (int)numericOnset.Value;
         }
 
         private void numericPitchVariance_ValueChanged(object sender, EventArgs e)
         {
-            pPitchVariance = (int)numericPitchVariance.Value;
+            pPitchVarianceCost = (int)numericPitchVariance.Value;
         }
 
         private void numericPitchRank_ValueChanged(object sender, EventArgs e)
         {
-            pPitchRank = (int)numericPitchRank.Value;
+            pPitchRankCost = (int)numericPitchRank.Value;
         }
 
         private void numericPitchCount_ValueChanged(object sender, EventArgs e)
         {
-            pPitchCount = (int)numericPitchCount.Value;
+            pPitchCountCost = (int)numericPitchCount.Value;
         }
 
         private void numericEpsilon_ValueChanged(object sender, EventArgs e)
         {
-            pEpsilon = (int)numericEpsilon.Value;
+            pDbscanEpsilon = (int)numericEpsilon.Value;
         }
 
         private void numericMinimumPoints_ValueChanged(object sender, EventArgs e)
         {
-            pMinimumPoints = (int)numericMinimumPoints.Value;
+            pDbscanMinimumPoints = (int)numericMinimumPoints.Value;
         }
 
         private void analysisStartButton_Click(object sender, EventArgs e)
